@@ -4,6 +4,7 @@ import App from './App.vue'
 import router from './router'
 import { initApiDeps } from './api/axios'
 import { useAuthStore } from './stores/auth'
+import { useThemeStore } from './stores/theme'
 import { usersApi } from './api/users'
 import './assets/main.css'
 
@@ -12,6 +13,9 @@ const pinia = createPinia()
 
 app.use(pinia)
 app.use(router)
+
+// Initialize theme (applies dark class to <html> before first paint)
+useThemeStore()
 
 // Wire lazy deps after pinia is installed (avoids circular import issue)
 initApiDeps(

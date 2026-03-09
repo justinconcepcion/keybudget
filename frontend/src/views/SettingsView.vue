@@ -1,17 +1,17 @@
 <template>
   <div class="px-6 py-8 max-w-3xl mx-auto">
     <div class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
         Settings
       </h1>
-      <p class="mt-1 text-sm text-gray-500">
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
         Manage your account preferences.
       </p>
     </div>
 
     <!-- Profile card -->
-    <div class="bg-white rounded-2xl border border-gray-200 p-6 mb-4">
-      <h2 class="text-base font-semibold text-gray-900 mb-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 mb-4">
+      <h2 class="text-base font-semibold text-gray-900 dark:text-white mb-4">
         Profile
       </h2>
       <div class="flex items-center gap-4">
@@ -28,47 +28,60 @@
           {{ initials }}
         </div>
         <div>
-          <p class="font-semibold text-gray-900">
+          <p class="font-semibold text-gray-900 dark:text-white">
             {{ authStore.user?.name }}
           </p>
-          <p class="text-sm text-gray-500">
+          <p class="text-sm text-gray-500 dark:text-gray-400">
             {{ authStore.user?.email }}
           </p>
-          <p class="text-xs text-gray-400 mt-1">
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
             Signed in with Google
           </p>
         </div>
       </div>
     </div>
 
-    <!-- Preferences placeholder -->
-    <div class="bg-white rounded-2xl border border-gray-200 p-6 mb-4">
-      <h2 class="text-base font-semibold text-gray-900 mb-4">
+    <!-- Preferences -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 mb-4">
+      <h2 class="text-base font-semibold text-gray-900 dark:text-white mb-4">
         Preferences
       </h2>
-      <div class="space-y-4 text-sm text-gray-500">
-        <div class="flex items-center justify-between py-2 border-b border-gray-100">
-          <span class="text-gray-700">Currency</span>
+      <div class="space-y-4 text-sm text-gray-500 dark:text-gray-400">
+        <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
+          <span class="text-gray-700 dark:text-gray-300">Theme</span>
+          <button
+            class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+            :class="themeStore.dark ? 'bg-primary-600' : 'bg-gray-300'"
+            @click="themeStore.toggle()"
+          >
+            <span
+              class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+              :class="themeStore.dark ? 'translate-x-6' : 'translate-x-1'"
+            />
+          </button>
+        </div>
+        <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
+          <span class="text-gray-700 dark:text-gray-300">Currency</span>
           <span class="text-gray-400">USD — coming soon</span>
         </div>
         <div class="flex items-center justify-between py-2">
-          <span class="text-gray-700">Notifications</span>
+          <span class="text-gray-700 dark:text-gray-300">Notifications</span>
           <span class="text-gray-400">Coming soon</span>
         </div>
       </div>
     </div>
 
     <!-- Danger zone -->
-    <div class="bg-white rounded-2xl border border-red-200 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-red-200 dark:border-red-900 p-6">
       <h2 class="text-base font-semibold text-red-700 mb-4">
         Danger Zone
       </h2>
       <div class="flex items-center justify-between">
         <div>
-          <p class="text-sm font-medium text-gray-900">
+          <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
             Sign out
           </p>
-          <p class="text-xs text-gray-500 mt-0.5">
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             You'll need to sign in again to access your account.
           </p>
         </div>
@@ -87,9 +100,11 @@
   import { computed } from 'vue'
   import { useRouter } from 'vue-router'
   import { useAuthStore } from '@/stores/auth'
+  import { useThemeStore } from '@/stores/theme'
 
   const router = useRouter()
   const authStore = useAuthStore()
+  const themeStore = useThemeStore()
 
   const initials = computed(() => {
     const name = authStore.user?.name ?? ''

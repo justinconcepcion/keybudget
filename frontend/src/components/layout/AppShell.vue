@@ -27,7 +27,7 @@
     <div class="flex flex-1 flex-col min-w-0 overflow-hidden">
       <AppNavbar @toggle-sidebar="sidebarOpen = !sidebarOpen" />
 
-      <main class="flex-1 overflow-y-auto">
+      <main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
         <RouterView />
       </main>
     </div>
