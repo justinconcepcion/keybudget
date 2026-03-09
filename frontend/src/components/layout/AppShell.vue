@@ -7,9 +7,15 @@
 
     <!-- Mobile sidebar overlay -->
     <Transition name="sidebar">
-      <div v-if="sidebarOpen" class="fixed inset-0 z-40 flex lg:hidden">
+      <div
+        v-if="sidebarOpen"
+        class="fixed inset-0 z-40 flex lg:hidden"
+      >
         <!-- Backdrop -->
-        <div class="fixed inset-0 bg-gray-600/50" @click="sidebarOpen = false" />
+        <div
+          class="fixed inset-0 bg-gray-600/50"
+          @click="sidebarOpen = false"
+        />
         <!-- Panel -->
         <div class="relative flex w-64 flex-shrink-0 flex-col">
           <AppSidebar />

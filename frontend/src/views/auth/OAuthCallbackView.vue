@@ -1,25 +1,65 @@
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50">
     <div class="text-center">
-      <div v-if="error" class="max-w-sm mx-auto px-4">
+      <div
+        v-if="error"
+        class="max-w-sm mx-auto px-4"
+      >
         <div class="text-red-500 mb-4">
-          <svg class="w-12 h-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg
+            class="w-12 h-12 mx-auto"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
         </div>
-        <p class="text-gray-700 font-medium mb-2">Sign-in failed</p>
-        <p class="text-sm text-gray-500 mb-4">{{ error }}</p>
-        <RouterLink to="/login" class="text-sm text-primary-600 hover:underline">Try again</RouterLink>
+        <p class="text-gray-700 font-medium mb-2">
+          Sign-in failed
+        </p>
+        <p class="text-sm text-gray-500 mb-4">
+          {{ error }}
+        </p>
+        <RouterLink
+          to="/login"
+          class="text-sm text-primary-600 hover:underline"
+        >
+          Try again
+        </RouterLink>
       </div>
 
-      <div v-else class="flex flex-col items-center gap-3">
-        <svg class="animate-spin w-8 h-8 text-primary-600" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-          <path class="opacity-75" fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+      <div
+        v-else
+        class="flex flex-col items-center gap-3"
+      >
+        <svg
+          class="animate-spin w-8 h-8 text-primary-600"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          />
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+          />
         </svg>
-        <p class="text-sm text-gray-500">Signing you in…</p>
+        <p class="text-sm text-gray-500">
+          Signing you in…
+        </p>
       </div>
     </div>
   </div>
