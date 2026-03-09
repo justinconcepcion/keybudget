@@ -5,6 +5,7 @@ import type {
   TransactionResponse,
   TransactionParams,
   CreateTransactionRequest,
+  UpdateTransactionRequest,
   MonthlySummaryResponse,
 } from '@/types'
 
@@ -34,6 +35,18 @@ export const useTransactionsStore = defineStore('transactions', () => {
     return created
   }
 
+  async function updateTransaction(
+    id: number,
+    data: UpdateTransactionRequest,
+  ): Promise<TransactionResponse> {
+    const updated = await transactionsApi.update(id, data)
+    return updated
+  }
+
+  async function deleteTransaction(id: number): Promise<void> {
+    await transactionsApi.delete(id)
+  }
+
   async function fetchMonthlySummary(month: string): Promise<void> {
     monthlySummary.value = await transactionsApi.getSummary(month)
   }
@@ -44,6 +57,8 @@ export const useTransactionsStore = defineStore('transactions', () => {
     monthlySummary,
     fetchTransactions,
     createTransaction,
+    updateTransaction,
+    deleteTransaction,
     fetchMonthlySummary,
   }
 })

@@ -125,6 +125,9 @@
             >
               Amount
             </th>
+            <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-20">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50">
@@ -147,6 +150,28 @@
               :class="tx.type === 'INCOME' ? 'text-emerald-600' : 'text-red-600'"
             >
               {{ tx.type === 'INCOME' ? '+' : '-' }}{{ formatMoney(tx.amount) }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex gap-1">
+                <button
+                  class="p-1.5 text-gray-400 hover:text-primary-600 rounded-lg hover:bg-primary-50 transition-colors"
+                  title="Edit"
+                  @click="openEditModal(tx)"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+                <button
+                  class="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                  title="Delete"
+                  @click="openDeleteModal(tx)"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -343,6 +368,169 @@
         </form>
       </div>
     </div>
+
+    <!-- Edit Transaction modal -->
+    <div
+      v-if="showEditModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50"
+      @mousedown.self="showEditModal = false"
+    >
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-lg font-semibold text-gray-900">
+            Edit Transaction
+          </h2>
+          <button
+            class="text-gray-400 hover:text-gray-600"
+            @click="showEditModal = false"
+          >
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form class="space-y-4" @submit.prevent="submitEdit">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+            <div class="flex rounded-lg border border-gray-300 overflow-hidden text-sm">
+              <button
+                type="button"
+                class="flex-1 py-2 transition-colors"
+                :class="editForm.type === 'EXPENSE' ? 'bg-red-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
+                @click="editForm.type = 'EXPENSE'"
+              >
+                Expense
+              </button>
+              <button
+                type="button"
+                class="flex-1 py-2 transition-colors"
+                :class="editForm.type === 'INCOME' ? 'bg-emerald-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
+                @click="editForm.type = 'INCOME'"
+              >
+                Income
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+              <input
+                v-model.number="editForm.amount"
+                type="number"
+                step="0.01"
+                min="0.01"
+                required
+                class="w-full pl-7 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Description
+              <span class="text-gray-400 font-normal">(optional)</span>
+            </label>
+            <input
+              v-model="editForm.description"
+              type="text"
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+            <input
+              v-model="editForm.date"
+              type="date"
+              required
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <select
+              v-model.number="editForm.categoryId"
+              required
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              <option value="" disabled>Select a category</option>
+              <option
+                v-for="cat in filteredEditCategories"
+                :key="cat.id"
+                :value="cat.id"
+              >
+                {{ cat.name }}
+              </option>
+            </select>
+          </div>
+
+          <p v-if="editFormError" class="text-sm text-red-600">
+            {{ editFormError }}
+          </p>
+
+          <div class="flex gap-3 pt-1">
+            <button
+              type="button"
+              class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              @click="showEditModal = false"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              :disabled="submittingEdit"
+              class="flex-1 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {{ submittingEdit ? 'Saving…' : 'Save Changes' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Delete confirmation modal -->
+    <div
+      v-if="showDeleteModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50"
+      @mousedown.self="showDeleteModal = false"
+    >
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-2">
+          Delete Transaction
+        </h2>
+        <p class="text-sm text-gray-600 mb-5">
+          Are you sure you want to delete this
+          <span class="font-medium">{{ formatMoney(deleteTarget?.amount ?? 0) }}</span>
+          transaction? This action cannot be undone.
+        </p>
+
+        <p v-if="deleteError" class="text-sm text-red-600 mb-4">
+          {{ deleteError }}
+        </p>
+
+        <div class="flex gap-3">
+          <button
+            type="button"
+            class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            @click="showDeleteModal = false"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            :disabled="submittingDelete"
+            class="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            @click="confirmDelete"
+          >
+            {{ submittingDelete ? 'Deleting…' : 'Delete' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -351,6 +539,7 @@
   import { useTransactionsStore } from '@/stores/transactions'
   import { useCategoriesStore } from '@/stores/categories'
   import { formatMoney, formatDate } from '@/utils/formatting'
+  import type { TransactionResponse } from '@/types'
 
   const transactionsStore = useTransactionsStore()
   const categoriesStore = useCategoriesStore()
@@ -485,6 +674,99 @@
       formError.value = 'Failed to save transaction. Please try again.'
     } finally {
       submitting.value = false
+    }
+  }
+
+  // ── Edit Transaction ──────────────────────────────────────────────────────
+
+  const showEditModal = ref(false)
+  const submittingEdit = ref(false)
+  const editFormError = ref('')
+  const editTargetId = ref<number | null>(null)
+
+  const editForm = reactive({
+    type: 'EXPENSE' as 'INCOME' | 'EXPENSE',
+    amount: null as number | null,
+    description: '',
+    date: '',
+    categoryId: '' as number | '',
+  })
+
+  const filteredEditCategories = computed(() =>
+    categoriesStore.categories.filter((c) => c.type === editForm.type),
+  )
+
+  watch(
+    () => editForm.type,
+    () => {
+      editForm.categoryId = ''
+    },
+  )
+
+  function openEditModal(tx: TransactionResponse) {
+    editTargetId.value = tx.id
+    editForm.type = tx.type
+    editForm.amount = tx.amount
+    editForm.description = tx.description || ''
+    editForm.date = tx.date
+    editForm.categoryId = tx.categoryId
+    editFormError.value = ''
+    showEditModal.value = true
+  }
+
+  async function submitEdit() {
+    if (!editForm.amount || editForm.amount <= 0) {
+      editFormError.value = 'Please enter a valid amount.'
+      return
+    }
+    if (!editForm.categoryId) {
+      editFormError.value = 'Please select a category.'
+      return
+    }
+    editFormError.value = ''
+    submittingEdit.value = true
+    try {
+      await transactionsStore.updateTransaction(editTargetId.value!, {
+        amount: editForm.amount,
+        description: editForm.description || undefined,
+        date: editForm.date,
+        type: editForm.type,
+        categoryId: editForm.categoryId as number,
+      })
+      showEditModal.value = false
+      await loadTransactions(transactionsStore.pagination.currentPage)
+    } catch {
+      editFormError.value = 'Failed to update transaction. Please try again.'
+    } finally {
+      submittingEdit.value = false
+    }
+  }
+
+  // ── Delete Transaction ────────────────────────────────────────────────────
+
+  const showDeleteModal = ref(false)
+  const submittingDelete = ref(false)
+  const deleteError = ref('')
+  const deleteTarget = ref<TransactionResponse | null>(null)
+
+  function openDeleteModal(tx: TransactionResponse) {
+    deleteTarget.value = tx
+    deleteError.value = ''
+    showDeleteModal.value = true
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget.value) return
+    submittingDelete.value = true
+    deleteError.value = ''
+    try {
+      await transactionsStore.deleteTransaction(deleteTarget.value.id)
+      showDeleteModal.value = false
+      await loadTransactions(transactionsStore.pagination.currentPage)
+    } catch {
+      deleteError.value = 'Failed to delete transaction. Please try again.'
+    } finally {
+      submittingDelete.value = false
     }
   }
 
