@@ -2,15 +2,29 @@
   <div class="px-6 py-8 max-w-7xl mx-auto">
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">Categories</h1>
-        <p class="mt-1 text-sm text-gray-500">Organize your income and expenses.</p>
+        <h1 class="text-2xl font-bold text-gray-900">
+          Categories
+        </h1>
+        <p class="mt-1 text-sm text-gray-500">
+          Organize your income and expenses.
+        </p>
       </div>
       <button
         class="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
         @click="showAddModal = true"
       >
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+        <svg
+          class="w-4 h-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 4v16m8-8H4"
+          />
         </svg>
         Add Category
       </button>
@@ -43,11 +57,18 @@
       class="bg-white rounded-2xl border border-gray-200 flex items-center justify-center h-64 text-gray-400 text-sm"
     >
       <div class="text-center">
-        <p class="font-medium text-gray-500">No {{ activeTab.toLowerCase() }} categories</p>
-        <p class="text-xs mt-1">Create one to get started.</p>
+        <p class="font-medium text-gray-500">
+          No {{ activeTab.toLowerCase() }} categories
+        </p>
+        <p class="text-xs mt-1">
+          Create one to get started.
+        </p>
       </div>
     </div>
-    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div
+      v-else
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+    >
       <div
         v-for="cat in filteredCategories"
         :key="cat.id"
@@ -61,18 +82,35 @@
             {{ cat.icon || '📁' }}
           </div>
           <div>
-            <p class="text-sm font-medium text-gray-900">{{ cat.name }}</p>
-            <p class="text-xs text-gray-500">{{ cat.type }}</p>
+            <p class="text-sm font-medium text-gray-900">
+              {{ cat.name }}
+            </p>
+            <p class="text-xs text-gray-500">
+              {{ cat.type }}
+            </p>
           </div>
         </div>
-        <div v-if="!cat.isDefault" class="flex gap-1">
+        <div
+          v-if="!cat.isDefault"
+          class="flex gap-1"
+        >
           <button
             class="p-1.5 text-gray-400 hover:text-primary-600 rounded-lg hover:bg-primary-50 transition-colors"
             title="Edit"
             @click="openEditModal(cat)"
           >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
             </svg>
           </button>
           <button
@@ -80,12 +118,25 @@
             title="Delete"
             @click="openDeleteModal(cat)"
           >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
             </svg>
           </button>
         </div>
-        <span v-else class="text-xs text-gray-400 italic">Default</span>
+        <span
+          v-else
+          class="text-xs text-gray-400 italic"
+        >Default</span>
       </div>
     </div>
 
@@ -97,15 +148,33 @@
     >
       <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
         <div class="flex items-center justify-between mb-5">
-          <h2 class="text-lg font-semibold text-gray-900">Add Category</h2>
-          <button class="text-gray-400 hover:text-gray-600" @click="showAddModal = false">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          <h2 class="text-lg font-semibold text-gray-900">
+            Add Category
+          </h2>
+          <button
+            class="text-gray-400 hover:text-gray-600"
+            @click="showAddModal = false"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
 
-        <form class="space-y-4" @submit.prevent="submitAdd">
+        <form
+          class="space-y-4"
+          @submit.prevent="submitAdd"
+        >
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
             <div class="flex rounded-lg border border-gray-300 overflow-hidden text-sm">
@@ -165,7 +234,12 @@
             >
           </div>
 
-          <p v-if="addFormError" class="text-sm text-red-600">{{ addFormError }}</p>
+          <p
+            v-if="addFormError"
+            class="text-sm text-red-600"
+          >
+            {{ addFormError }}
+          </p>
 
           <div class="flex gap-3 pt-1">
             <button
@@ -195,15 +269,33 @@
     >
       <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
         <div class="flex items-center justify-between mb-5">
-          <h2 class="text-lg font-semibold text-gray-900">Edit Category</h2>
-          <button class="text-gray-400 hover:text-gray-600" @click="showEditModal = false">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          <h2 class="text-lg font-semibold text-gray-900">
+            Edit Category
+          </h2>
+          <button
+            class="text-gray-400 hover:text-gray-600"
+            @click="showEditModal = false"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
 
-        <form class="space-y-4" @submit.prevent="submitEdit">
+        <form
+          class="space-y-4"
+          @submit.prevent="submitEdit"
+        >
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
             <div class="flex rounded-lg border border-gray-300 overflow-hidden text-sm">
@@ -261,7 +353,12 @@
             >
           </div>
 
-          <p v-if="editFormError" class="text-sm text-red-600">{{ editFormError }}</p>
+          <p
+            v-if="editFormError"
+            class="text-sm text-red-600"
+          >
+            {{ editFormError }}
+          </p>
 
           <div class="flex gap-3 pt-1">
             <button
@@ -290,14 +387,21 @@
       @mousedown.self="showDeleteModal = false"
     >
       <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-2">Delete Category</h2>
+        <h2 class="text-lg font-semibold text-gray-900 mb-2">
+          Delete Category
+        </h2>
         <p class="text-sm text-gray-600 mb-5">
           Are you sure you want to delete
           <span class="font-medium">"{{ deleteTarget?.name }}"</span>?
           Transactions using this category may be affected.
         </p>
 
-        <p v-if="deleteError" class="text-sm text-red-600 mb-4">{{ deleteError }}</p>
+        <p
+          v-if="deleteError"
+          class="text-sm text-red-600 mb-4"
+        >
+          {{ deleteError }}
+        </p>
 
         <div class="flex gap-3">
           <button
