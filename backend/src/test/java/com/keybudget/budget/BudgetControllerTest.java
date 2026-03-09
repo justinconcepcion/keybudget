@@ -2,6 +2,7 @@ package com.keybudget.budget;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.keybudget.budget.dto.BudgetAlertResponse;
 import com.keybudget.budget.dto.BudgetResponse;
 import com.keybudget.budget.dto.CreateBudgetRequest;
 import com.keybudget.budget.dto.UpdateBudgetRequest;
@@ -43,6 +44,44 @@ class BudgetControllerTest {
                 new BigDecimal("200.00"),
                 new BigDecimal("300.00")
         );
+    }
+
+    // -------------------------------------------------------------------------
+    // GET /api/v1/budgets/alerts
+    // -------------------------------------------------------------------------
+
+    @Test
+    void getAlerts_givenValidJwt_200() throws Exception {
+        BudgetAlertResponse alert = new BudgetAlertResponse(
+                10L, 5L, "Food", "#FF9800",
+                new BigDecimal("100.00"), new BigDecimal("90.00"),
+                90, BudgetAlertResponse.AlertLevel.WARNING);
+
+        when(budgetService.getAlerts(1L)).thenReturn(List.of(alert));
+
+        mockMvc.perform(get("/api/v1/budgets/alerts")
+                        .with(jwt().jwt(j -> j.claim("userId", 1L))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].categoryName").value("Food"))
+                .andExpect(jsonPath("$[0].percentUsed").value(90))
+                .andExpect(jsonPath("$[0].alertLevel").value("WARNING"));
+    }
+
+    @Test
+    void getAlerts_givenNoJwt_401() throws Exception {
+        mockMvc.perform(get("/api/v1/budgets/alerts"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getAlerts_givenServiceThrows_500() throws Exception {
+        when(budgetService.getAlerts(1L)).thenThrow(new RuntimeException("DB error"));
+
+        mockMvc.perform(get("/api/v1/budgets/alerts")
+                        .with(jwt().jwt(j -> j.claim("userId", 1L))))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error").value("INTERNAL_ERROR"));
     }
 
     // -------------------------------------------------------------------------

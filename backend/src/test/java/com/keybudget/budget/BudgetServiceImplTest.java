@@ -1,5 +1,6 @@
 package com.keybudget.budget;
 
+import com.keybudget.budget.dto.BudgetAlertResponse;
 import com.keybudget.budget.dto.BudgetResponse;
 import com.keybudget.budget.dto.CreateBudgetRequest;
 import com.keybudget.budget.dto.UpdateBudgetRequest;
@@ -226,6 +227,77 @@ class BudgetServiceImplTest {
                 .hasMessageContaining("Budget not found");
 
         verify(budgetRepository, never()).delete(any());
+    }
+
+    // -------------------------------------------------------------------------
+    // getAlerts
+    // -------------------------------------------------------------------------
+
+    @Test
+    void getAlerts_givenBudgetAt80Percent_returnsWarning() {
+        Long userId = 1L;
+        YearMonth now = YearMonth.now();
+
+        Category cat = buildCategory(5L, "Food", "#FF9800");
+        Budget budget = buildBudget(10L, userId, 5L, now, new BigDecimal("100.00"));
+
+        when(budgetRepository.findByUserIdAndMonthYear(userId, now)).thenReturn(List.of(budget));
+        when(categoryRepository.findByUserIdOrUserIdIsNull(userId)).thenReturn(List.of(cat));
+
+        List<Object[]> spentRows = new java.util.ArrayList<>();
+        spentRows.add(new Object[]{5L, new BigDecimal("85.00")});
+        when(transactionRepository.sumExpensesByCategory(eq(userId), any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(spentRows);
+
+        List<BudgetAlertResponse> alerts = budgetService.getAlerts(userId);
+
+        assertThat(alerts).hasSize(1);
+        assertThat(alerts.get(0).alertLevel()).isEqualTo(BudgetAlertResponse.AlertLevel.WARNING);
+        assertThat(alerts.get(0).percentUsed()).isEqualTo(85);
+    }
+
+    @Test
+    void getAlerts_givenBudgetExceeded_returnsExceeded() {
+        Long userId = 1L;
+        YearMonth now = YearMonth.now();
+
+        Category cat = buildCategory(5L, "Food", "#FF9800");
+        Budget budget = buildBudget(10L, userId, 5L, now, new BigDecimal("100.00"));
+
+        when(budgetRepository.findByUserIdAndMonthYear(userId, now)).thenReturn(List.of(budget));
+        when(categoryRepository.findByUserIdOrUserIdIsNull(userId)).thenReturn(List.of(cat));
+
+        List<Object[]> spentRows = new java.util.ArrayList<>();
+        spentRows.add(new Object[]{5L, new BigDecimal("120.00")});
+        when(transactionRepository.sumExpensesByCategory(eq(userId), any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(spentRows);
+
+        List<BudgetAlertResponse> alerts = budgetService.getAlerts(userId);
+
+        assertThat(alerts).hasSize(1);
+        assertThat(alerts.get(0).alertLevel()).isEqualTo(BudgetAlertResponse.AlertLevel.EXCEEDED);
+        assertThat(alerts.get(0).percentUsed()).isEqualTo(120);
+    }
+
+    @Test
+    void getAlerts_givenBudgetBelow80Percent_returnsEmpty() {
+        Long userId = 1L;
+        YearMonth now = YearMonth.now();
+
+        Category cat = buildCategory(5L, "Food", "#FF9800");
+        Budget budget = buildBudget(10L, userId, 5L, now, new BigDecimal("100.00"));
+
+        when(budgetRepository.findByUserIdAndMonthYear(userId, now)).thenReturn(List.of(budget));
+        when(categoryRepository.findByUserIdOrUserIdIsNull(userId)).thenReturn(List.of(cat));
+
+        List<Object[]> spentRows = new java.util.ArrayList<>();
+        spentRows.add(new Object[]{5L, new BigDecimal("50.00")});
+        when(transactionRepository.sumExpensesByCategory(eq(userId), any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(spentRows);
+
+        List<BudgetAlertResponse> alerts = budgetService.getAlerts(userId);
+
+        assertThat(alerts).isEmpty();
     }
 
     // -------------------------------------------------------------------------

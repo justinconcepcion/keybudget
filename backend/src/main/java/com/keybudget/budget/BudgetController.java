@@ -1,5 +1,6 @@
 package com.keybudget.budget;
 
+import com.keybudget.budget.dto.BudgetAlertResponse;
 import com.keybudget.budget.dto.BudgetResponse;
 import com.keybudget.budget.dto.CreateBudgetRequest;
 import com.keybudget.budget.dto.UpdateBudgetRequest;
@@ -27,6 +28,16 @@ public class BudgetController {
 
     public BudgetController(BudgetService budgetService) {
         this.budgetService = budgetService;
+    }
+
+    /**
+     * GET /api/v1/budgets/alerts
+     * Returns budget alerts for the current month where spending is at or above 80%.
+     */
+    @GetMapping("/alerts")
+    public ResponseEntity<List<BudgetAlertResponse>> getAlerts(@AuthenticationPrincipal Jwt jwt) {
+        Long userId = jwt.getClaim("userId");
+        return ResponseEntity.ok(budgetService.getAlerts(userId));
     }
 
     /**

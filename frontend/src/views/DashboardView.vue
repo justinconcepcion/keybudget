@@ -25,6 +25,50 @@
       />
     </div>
 
+    <!-- Budget alerts -->
+    <div
+      v-if="budgetsStore.alerts.length > 0"
+      class="mb-8 space-y-2"
+    >
+      <div
+        v-for="alert in budgetsStore.alerts"
+        :key="alert.budgetId"
+        class="rounded-2xl border p-4 flex items-center justify-between"
+        :class="alert.alertLevel === 'EXCEEDED'
+          ? 'bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800'
+          : 'bg-yellow-50 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800'"
+      >
+        <div class="flex items-center gap-3">
+          <span
+            class="inline-block w-3 h-3 rounded-full flex-shrink-0"
+            :style="{ backgroundColor: alert.categoryColor }"
+          />
+          <div>
+            <p
+              class="text-sm font-semibold"
+              :class="alert.alertLevel === 'EXCEEDED' ? 'text-red-900 dark:text-red-200' : 'text-yellow-900 dark:text-yellow-200'"
+            >
+              {{ alert.alertLevel === 'EXCEEDED' ? 'Over budget' : 'Approaching limit' }}:
+              {{ alert.categoryName }}
+            </p>
+            <p
+              class="text-xs mt-0.5"
+              :class="alert.alertLevel === 'EXCEEDED' ? 'text-red-700 dark:text-red-400' : 'text-yellow-700 dark:text-yellow-400'"
+            >
+              {{ formatMoney(alert.spentAmount) }} of {{ formatMoney(alert.limitAmount) }} ({{ alert.percentUsed }}%)
+            </p>
+          </div>
+        </div>
+        <RouterLink
+          to="/budgets"
+          class="text-sm font-medium hover:underline flex-shrink-0"
+          :class="alert.alertLevel === 'EXCEEDED' ? 'text-red-600 dark:text-red-400' : 'text-yellow-600 dark:text-yellow-400'"
+        >
+          View Budget
+        </RouterLink>
+      </div>
+    </div>
+
     <!-- Connect accounts CTA (shown when no providers connected) -->
     <div
       v-if="!integrationsStore.netWorth || integrationsStore.netWorth.byProvider.length === 0"
@@ -308,6 +352,7 @@
       transactionsStore.fetchMonthlySummary(month).finally(() => (summaryLoading.value = false)),
       transactionsStore.fetchTransactions({ start, end, page: 0, size: 20 }),
       budgetsStore.fetchBudgets(month).finally(() => (budgetsLoading.value = false)),
+      budgetsStore.fetchAlerts().catch(() => {}),
       integrationsStore.fetchNetWorth().catch(() => {}),
     ])
   })

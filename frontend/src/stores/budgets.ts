@@ -1,13 +1,23 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { budgetsApi } from '@/api/budgets'
-import type { BudgetResponse, CreateBudgetRequest, UpdateBudgetRequest } from '@/types'
+import type {
+  BudgetAlertResponse,
+  BudgetResponse,
+  CreateBudgetRequest,
+  UpdateBudgetRequest,
+} from '@/types'
 
 export const useBudgetsStore = defineStore('budgets', () => {
   const budgets = ref<BudgetResponse[]>([])
+  const alerts = ref<BudgetAlertResponse[]>([])
 
   async function fetchBudgets(month: string): Promise<void> {
     budgets.value = await budgetsApi.getAll(month)
+  }
+
+  async function fetchAlerts(): Promise<void> {
+    alerts.value = await budgetsApi.getAlerts()
   }
 
   async function createBudget(data: CreateBudgetRequest): Promise<BudgetResponse> {
@@ -30,7 +40,9 @@ export const useBudgetsStore = defineStore('budgets', () => {
 
   return {
     budgets,
+    alerts,
     fetchBudgets,
+    fetchAlerts,
     createBudget,
     updateBudget,
     deleteBudget,

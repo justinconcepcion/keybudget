@@ -1,9 +1,18 @@
 import api from './axios'
-import type { BudgetResponse, CreateBudgetRequest, UpdateBudgetRequest } from '@/types'
+import type {
+  BudgetAlertResponse,
+  BudgetResponse,
+  CreateBudgetRequest,
+  UpdateBudgetRequest,
+} from '@/types'
 
 export const budgetsApi = {
   getAll(month: string): Promise<BudgetResponse[]> {
     return api.get<BudgetResponse[]>('/budgets', { params: { month } }).then((r) => r.data)
+  },
+
+  getAlerts(): Promise<BudgetAlertResponse[]> {
+    return api.get<BudgetAlertResponse[]>('/budgets/alerts').then((r) => r.data)
   },
 
   create(data: CreateBudgetRequest): Promise<BudgetResponse> {
