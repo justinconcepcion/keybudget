@@ -38,7 +38,31 @@ git clone https://github.com/justinconcepcion/keybudget.git
 cd keybudget
 ```
 
-### 2. Configure secrets
+### 2. Quick start (Unix / Git Bash)
+
+The dev startup script auto-generates ephemeral RSA and AES keys, so you can start without any manual configuration. Google OAuth login will be disabled until you add credentials (see step 3).
+
+```bash
+# Terminal 1 — starts the backend with auto-generated keys
+bash scripts/start-dev.sh
+
+# Terminal 2 — starts the frontend dev server
+cd frontend && npm install && npm run dev
+```
+
+### 2b. Quick start (Windows CMD)
+
+Requires `backend\.env` with secrets configured (see step 3).
+
+```cmd
+REM Terminal 1
+start-backend.bat
+
+REM Terminal 2
+start-frontend.bat
+```
+
+### 3. Configure secrets (for Google OAuth login)
 
 Create `backend/.env` with your credentials:
 
@@ -50,32 +74,27 @@ export JWT_PUBLIC_KEY=base64-encoded-rsa-public-key
 export ENCRYPTION_KEY=base64-encoded-32-byte-aes-key
 ```
 
-Generate RSA and AES keys using the helper script:
+Generate RSA and AES keys using the helper scripts:
 
 ```bash
-bash scripts/generate-keys.sh
+bash scripts/generate-keys.sh         # outputs JWT_PRIVATE_KEY and JWT_PUBLIC_KEY values
+openssl rand -base64 32               # generates ENCRYPTION_KEY value
 ```
 
-### 3. Start the backend
+To set up Google OAuth credentials, create a project in [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials → OAuth 2.0 Client ID, and add `http://localhost:8080/login/oauth2/code/google` as an authorized redirect URI.
 
-```bash
-cd backend
-./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
-```
+> **Note:** If you use `scripts/start-dev.sh`, JWT and encryption keys are auto-generated ephemerally when not set in `.env`. You only need to manually generate keys if you want them to persist across restarts.
 
-The API starts on **http://localhost:8080**.
+### Local dev URLs
 
-### 4. Start the frontend
+| Service      | URL                                      |
+|--------------|------------------------------------------|
+| Frontend     | http://localhost:5173                     |
+| Backend API  | http://localhost:8080                     |
+| Health check | http://localhost:8080/actuator/health     |
+| H2 Console   | http://localhost:8080/h2-console (dev)    |
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-The dev server starts on **http://localhost:5173**.
-
-> **Windows users:** You can also use `start-backend.bat` and `start-frontend.bat` from the project root.
+The dev profile uses an **H2 in-memory database** — no database setup required. Data resets on each restart. The Vite dev server automatically proxies `/api/**` and `/oauth2/**` requests to the backend.
 
 ## Project Structure
 
@@ -99,7 +118,11 @@ keybudget/
 │       ├── router/         # Vue Router with auth guard
 │       ├── api/            # Axios HTTP layer with token refresh interceptor
 │       └── types/          # TypeScript type definitions
-└── scripts/                # Dev utility scripts (key generation)
+├── scripts/                # Dev utility scripts
+│   ├── start-dev.sh        # One-command backend startup (auto-generates keys)
+│   └── generate-keys.sh    # RSA key pair generator for JWT signing
+├── start-backend.bat       # Windows backend launcher (reads backend/.env)
+└── start-frontend.bat      # Windows frontend launcher
 ```
 
 ## API Endpoints
