@@ -4,6 +4,8 @@ import com.keybudget.integration.ProviderType;
 import com.keybudget.integration.SyncStatus;
 import com.keybudget.integration.model.IntegrationCredential;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -37,4 +39,16 @@ public interface IntegrationCredentialRepository extends JpaRepository<Integrati
      * @return list of matching credentials
      */
     List<IntegrationCredential> findByStatus(SyncStatus status);
+
+    /**
+     * Returns all credentials matching the given status with their associated {@code User}
+     * eagerly fetched via JOIN FETCH. Use this in scheduler contexts where no Hibernate
+     * session is open after the query completes, to avoid lazy-loading
+     * {@code credential.getUser().getId()} on a closed session.
+     *
+     * @param status the status to filter by
+     * @return list of matching credentials with user populated
+     */
+    @Query("SELECT c FROM IntegrationCredential c JOIN FETCH c.user WHERE c.status = :status")
+    List<IntegrationCredential> findByStatusWithUser(@Param("status") SyncStatus status);
 }
