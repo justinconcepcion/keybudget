@@ -17,9 +17,12 @@ frontend/.vite/
 
 # Environment / secrets — NEVER commit these
 *.env
-.env*
+.env
+.env.local
+.env.*.local
 application-local.properties
 application-secrets.properties
+application-dev.properties
 
 # OS
 .DS_Store
