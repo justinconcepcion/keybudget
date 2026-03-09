@@ -120,6 +120,19 @@ export interface BudgetResponse {
   remainingAmount: number
 }
 
+export type AlertLevel = 'WARNING' | 'EXCEEDED'
+
+export interface BudgetAlertResponse {
+  budgetId: number
+  categoryId: number
+  categoryName: string
+  categoryColor: string
+  limitAmount: number
+  spentAmount: number
+  percentUsed: number
+  alertLevel: AlertLevel
+}
+
 export interface CreateBudgetRequest {
   categoryId: number
   monthYear: string
