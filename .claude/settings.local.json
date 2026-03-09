@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(./mvnw:*)",
+      "Bash(JAVA_HOME=*./mvnw:*)",
+      "Bash(npm run:*)",
+      "Bash(npm install:*)",
+      "Bash(npx:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(gh:*)"
+    ]
+  }
+}
