@@ -1,6 +1,7 @@
 package com.keybudget.transaction;
 
 import com.keybudget.transaction.dto.CreateTransactionRequest;
+import com.keybudget.transaction.dto.CsvImportResult;
 import com.keybudget.transaction.dto.MonthlySummaryResponse;
 import com.keybudget.transaction.dto.TransactionResponse;
 import com.keybudget.transaction.dto.UpdateTransactionRequest;
@@ -16,6 +17,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -30,9 +32,11 @@ public class TransactionController {
     private static final DateTimeFormatter YEAR_MONTH_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM");
 
     private final TransactionService transactionService;
+    private final CsvImportService csvImportService;
 
-    public TransactionController(TransactionService transactionService) {
+    public TransactionController(TransactionService transactionService, CsvImportService csvImportService) {
         this.transactionService = transactionService;
+        this.csvImportService = csvImportService;
     }
 
     /**
@@ -97,6 +101,23 @@ public class TransactionController {
         Long userId = jwt.getClaim("userId");
         transactionService.deleteTransaction(userId, id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * POST /api/v1/transactions/import
+     * Imports transactions from a CSV file. Expected format: Date,Description,Amount
+     * Negative amounts are treated as expenses, positive as income.
+     *
+     * @param file              the CSV file to import
+     * @param defaultCategoryId optional category to assign all imports to
+     */
+    @PostMapping("/import")
+    public ResponseEntity<CsvImportResult> importCsv(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "categoryId", required = false) Long defaultCategoryId) {
+        Long userId = jwt.getClaim("userId");
+        return ResponseEntity.ok(csvImportService.importCsv(userId, file, defaultCategoryId));
     }
 
     /**
