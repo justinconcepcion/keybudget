@@ -1,5 +1,6 @@
 package com.keybudget.shared;
 
+import com.keybudget.auth.InvalidRefreshTokenException;
 import com.keybudget.integration.exception.ProviderAuthException;
 import com.keybudget.integration.exception.ProviderException;
 import com.keybudget.integration.exception.ProviderRateLimitException;
@@ -74,6 +75,12 @@ public class GlobalExceptionHandler {
         log.warn("Unsupported operation: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
                 .body(ErrorResponse.of("NOT_IMPLEMENTED", ex.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidRefreshToken(InvalidRefreshTokenException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.of("INVALID_REFRESH_TOKEN", "Invalid refresh token"));
     }
 
     @ExceptionHandler(Exception.class)

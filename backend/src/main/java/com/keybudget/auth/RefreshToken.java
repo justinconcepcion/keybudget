@@ -20,6 +20,9 @@ public class RefreshToken {
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
+    @Column(name = "family_id", nullable = false)
+    private String familyId;
+
     @Column(name = "revoked_at", nullable = true)
     private Instant revokedAt;
 
@@ -40,8 +43,11 @@ public class RefreshToken {
     public Instant getRevokedAt() { return revokedAt; }
     public Instant getCreatedAt() { return createdAt; }
 
+    public String getFamilyId() { return familyId; }
+
     public void setJti(String jti) { this.jti = jti; }
     public void setUserId(Long userId) { this.userId = userId; }
     public void setExpiresAt(Instant expiresAt) { this.expiresAt = expiresAt; }
+    public void setFamilyId(String familyId) { this.familyId = familyId; }
     public void setRevokedAt(Instant revokedAt) { this.revokedAt = revokedAt; }
 }

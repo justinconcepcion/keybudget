@@ -4,6 +4,7 @@ import com.keybudget.auth.dto.AuthResponse;
 import com.keybudget.user.User;
 import com.keybudget.user.UserService;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 
+@Slf4j
 @Validated
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -49,22 +51,20 @@ public class AuthController {
         String oldJti = jwtService.extractJti(refreshToken);
         RefreshToken storedToken;
         try {
-            storedToken = refreshTokenService.validate(oldJti);
-        } catch (IllegalArgumentException e) {
-            // Possible token theft — revoke all tokens for this user
-            refreshTokenService.revokeAllForUser(userId);
+            storedToken = refreshTokenService.validateAndRevoke(oldJti);
+        } catch (InvalidRefreshTokenException e) {
+            log.warn("Refresh token validation failed for userId={}: {}", userId, e.getMessage());
             return ResponseEntity.status(401).build();
         }
         if (!storedToken.getUserId().equals(userId)) {
             return ResponseEntity.status(401).build();
         }
-        refreshTokenService.revoke(oldJti);
 
         String newAccessToken = jwtService.issueAccessToken(user);
         String newRefreshToken = jwtService.issueRefreshToken(user);
 
         refreshTokenService.store(jwtService.extractJti(newRefreshToken), userId,
-                Instant.now().plusSeconds(REFRESH_TOKEN_MAX_AGE_SECONDS));
+                Instant.now().plusSeconds(REFRESH_TOKEN_MAX_AGE_SECONDS), storedToken.getFamilyId());
 
         ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", newRefreshToken)
                 .httpOnly(true)
@@ -84,7 +84,7 @@ public class AuthController {
             HttpServletResponse response) {
         if (refreshToken != null) {
             try {
-                refreshTokenService.revoke(jwtService.extractJti(refreshToken));
+                refreshTokenService.validateAndRevoke(jwtService.extractJti(refreshToken));
             } catch (Exception ignored) {}
         }
         ResponseCookie cookie = ResponseCookie.from("refresh_token", "")
