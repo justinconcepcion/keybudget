@@ -20,7 +20,7 @@ export interface SummaryCardProps {
   label: string
   value: string
   trend: string | null
-  icon: 'balance' | 'income' | 'expense' | 'savings'
+  icon: 'balance' | 'income' | 'expense' | 'savings' | 'net-worth'
   iconBg: string
 }
 

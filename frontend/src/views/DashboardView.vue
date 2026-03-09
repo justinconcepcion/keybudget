@@ -10,7 +10,10 @@
     </div>
 
     <!-- Summary cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+    <div
+      class="grid gap-4 mb-8"
+      :class="summaryCards.length > 4 ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-5' : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-4'"
+    >
       <SummaryCard
         v-for="card in summaryCards"
         :key="card.label"
@@ -20,6 +23,27 @@
         :icon="card.icon"
         :icon-bg="card.iconBg"
       />
+    </div>
+
+    <!-- Connect accounts CTA (shown when no providers connected) -->
+    <div
+      v-if="!integrationsStore.netWorth || integrationsStore.netWorth.byProvider.length === 0"
+      class="mb-8 bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-center justify-between"
+    >
+      <div>
+        <p class="text-sm font-semibold text-amber-900">
+          Track your net worth
+        </p>
+        <p class="text-xs text-amber-700 mt-0.5">
+          Connect Coinbase, Bitcoin, or other accounts to see your total wealth.
+        </p>
+      </div>
+      <RouterLink
+        to="/accounts"
+        class="px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition-colors flex-shrink-0"
+      >
+        Connect Accounts
+      </RouterLink>
     </div>
 
     <!-- Lower grid -->
@@ -174,12 +198,14 @@
   import { useAuthStore } from '@/stores/auth'
   import { useTransactionsStore } from '@/stores/transactions'
   import { useBudgetsStore } from '@/stores/budgets'
+  import { useIntegrationsStore } from '@/stores/integrations'
   import SummaryCard from '@/components/dashboard/SummaryCard.vue'
   import { formatMoney, formatDate, budgetPct, budgetBarColor } from '@/utils/formatting'
 
   const authStore = useAuthStore()
   const transactionsStore = useTransactionsStore()
   const budgetsStore = useBudgetsStore()
+  const integrationsStore = useIntegrationsStore()
 
   const summaryLoading = ref(false)
   const budgetsLoading = ref(false)
@@ -212,7 +238,19 @@
     const net = summary.value?.netSavings ?? 0
     const rate = income > 0 ? Math.round((net / income) * 100) : null
 
-    return [
+    const cards = []
+
+    if (integrationsStore.netWorth && integrationsStore.netWorth.byProvider.length > 0) {
+      cards.push({
+        label: 'Net Worth',
+        value: formatMoney(integrationsStore.netWorth.totalNetWorthUsd),
+        trend: null,
+        icon: 'net-worth' as const,
+        iconBg: 'bg-amber-100 text-amber-600',
+      })
+    }
+
+    cards.push(
       {
         label: 'Net Savings',
         value: formatMoney(net),
@@ -241,7 +279,9 @@
         icon: 'savings' as const,
         iconBg: 'bg-purple-100 text-purple-600',
       },
-    ]
+    )
+
+    return cards
   })
 
   const categoryTotals = computed(() => summary.value?.byCategory ?? [])
@@ -268,6 +308,7 @@
       transactionsStore.fetchMonthlySummary(month).finally(() => (summaryLoading.value = false)),
       transactionsStore.fetchTransactions({ start, end, page: 0, size: 20 }),
       budgetsStore.fetchBudgets(month).finally(() => (budgetsLoading.value = false)),
+      integrationsStore.fetchNetWorth().catch(() => {}),
     ])
   })
 </script>
