@@ -11,16 +11,16 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
     Optional<RefreshToken> findByJti(String jti);
 
     @Modifying
-    @Query("UPDATE RefreshToken r SET r.revokedAt = CURRENT_TIMESTAMP WHERE r.jti = :jti AND r.revokedAt IS NULL")
-    int revokeIfActive(String jti);
+    @Query("UPDATE RefreshToken r SET r.revokedAt = :now WHERE r.jti = :jti AND r.revokedAt IS NULL")
+    int revokeIfActive(String jti, Instant now);
 
     @Modifying
-    @Query("UPDATE RefreshToken r SET r.revokedAt = CURRENT_TIMESTAMP WHERE r.userId = :userId AND r.revokedAt IS NULL")
-    int revokeAllActiveByUserId(Long userId);
+    @Query("UPDATE RefreshToken r SET r.revokedAt = :now WHERE r.userId = :userId AND r.revokedAt IS NULL")
+    int revokeAllActiveByUserId(Long userId, Instant now);
 
     @Modifying
-    @Query("UPDATE RefreshToken r SET r.revokedAt = CURRENT_TIMESTAMP WHERE r.familyId = :familyId AND r.revokedAt IS NULL")
-    int revokeAllActiveByFamilyId(String familyId);
+    @Query("UPDATE RefreshToken r SET r.revokedAt = :now WHERE r.familyId = :familyId AND r.revokedAt IS NULL")
+    int revokeAllActiveByFamilyId(String familyId, Instant now);
 
     @Modifying
     @Query("DELETE FROM RefreshToken r WHERE r.revokedAt IS NOT NULL AND r.revokedAt < :before")
