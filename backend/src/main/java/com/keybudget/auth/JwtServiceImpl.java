@@ -25,15 +25,21 @@ public class JwtServiceImpl implements JwtService {
 
     private final PrivateKey privateKey;
     private final PublicKey publicKey;
+    private final String issuer;
+    private final String audience;
 
     public JwtServiceImpl(
             @Value("${app.jwt.private-key}") String privateKeyBase64,
-            @Value("${app.jwt.public-key}") String publicKeyBase64) throws Exception {
+            @Value("${app.jwt.public-key}") String publicKeyBase64,
+            @Value("${app.jwt.issuer}") String issuer,
+            @Value("${app.jwt.audience}") String audience) throws Exception {
         KeyFactory kf = KeyFactory.getInstance("RSA");
         this.privateKey = kf.generatePrivate(
                 new PKCS8EncodedKeySpec(Base64.getDecoder().decode(privateKeyBase64)));
         this.publicKey = kf.generatePublic(
                 new X509EncodedKeySpec(Base64.getDecoder().decode(publicKeyBase64)));
+        this.issuer = issuer;
+        this.audience = audience;
     }
 
     @Override
@@ -76,7 +82,8 @@ public class JwtServiceImpl implements JwtService {
                 .id(UUID.randomUUID().toString())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plusSeconds(expirySeconds)))
-                .issuer("keybudget-api")
+                .issuer(issuer)
+                .audience().add(audience).and()
                 .signWith(privateKey)
                 .compact();
     }
@@ -84,7 +91,8 @@ public class JwtServiceImpl implements JwtService {
     private Claims parseClaims(String token) {
         return Jwts.parser()
                 .verifyWith(publicKey)
-                .requireIssuer("keybudget-api")
+                .requireIssuer(issuer)
+                .requireAudience(audience)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();

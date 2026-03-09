@@ -36,14 +36,20 @@ public class SecurityConfig {
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final String publicKeyBase64;
     private final String frontendUrl;
+    private final String issuer;
+    private final String audience;
 
     public SecurityConfig(
             OAuth2SuccessHandler oAuth2SuccessHandler,
             @Value("${app.jwt.public-key}") String publicKeyBase64,
-            @Value("${app.frontend-url}") String frontendUrl) {
+            @Value("${app.frontend-url}") String frontendUrl,
+            @Value("${app.jwt.issuer}") String issuer,
+            @Value("${app.jwt.audience}") String audience) {
         this.oAuth2SuccessHandler = oAuth2SuccessHandler;
         this.publicKeyBase64 = publicKeyBase64;
         this.frontendUrl = frontendUrl;
+        this.issuer = issuer;
+        this.audience = audience;
     }
 
     @Bean
@@ -63,7 +69,6 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex
-                // All /api/** paths return 401 instead of redirecting to OAuth2 login
                 .defaultAuthenticationEntryPointFor(
                     new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
                     new AntPathRequestMatcher("/api/**")
@@ -88,7 +93,9 @@ public class SecurityConfig {
             NimbusJwtDecoder decoder = NimbusJwtDecoder.withPublicKey((RSAPublicKey) publicKey).build();
             OAuth2TokenValidator<Jwt> validators = new DelegatingOAuth2TokenValidator<>(
                     new JwtTimestampValidator(),
-                    new JwtClaimValidator<String>("iss", "keybudget-api"::equals)
+                    new JwtClaimValidator<String>("iss", issuer::equals),
+                    new JwtClaimValidator<String>("tokenType", "access"::equals),
+                    new JwtClaimValidator<List<String>>("aud", aud -> aud != null && aud.contains(audience))
             );
             decoder.setJwtValidator(validators);
             return decoder;

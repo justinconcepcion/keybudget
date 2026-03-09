@@ -4,6 +4,7 @@ import com.keybudget.auth.dto.AuthResponse;
 import com.keybudget.user.User;
 import com.keybudget.user.UserService;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 
+@Slf4j
 @Validated
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -43,28 +45,36 @@ public class AuthController {
         if (refreshToken == null || !jwtService.isValidRefreshToken(refreshToken)) {
             return ResponseEntity.status(401).build();
         }
-        Long userId = jwtService.extractUserId(refreshToken);
-        User user = userService.findById(userId);
 
+        Long userId = jwtService.extractUserId(refreshToken);
         String oldJti = jwtService.extractJti(refreshToken);
+
+        // Validate and atomically revoke BEFORE user lookup to ensure
+        // reuse detection triggers even for deleted users
         RefreshToken storedToken;
         try {
-            storedToken = refreshTokenService.validate(oldJti);
-        } catch (IllegalArgumentException e) {
-            // Possible token theft — revoke all tokens for this user
-            refreshTokenService.revokeAllForUser(userId);
+            storedToken = refreshTokenService.validateAndRevoke(oldJti);
+        } catch (InvalidRefreshTokenException e) {
+            log.warn("Refresh token validation failed for userId={}: {}", userId, e.getMessage());
             return ResponseEntity.status(401).build();
         }
         if (!storedToken.getUserId().equals(userId)) {
             return ResponseEntity.status(401).build();
         }
-        refreshTokenService.revoke(oldJti);
+
+        User user;
+        try {
+            user = userService.findById(userId);
+        } catch (Exception e) {
+            log.warn("User not found during refresh for userId={}", userId);
+            return ResponseEntity.status(401).build();
+        }
 
         String newAccessToken = jwtService.issueAccessToken(user);
         String newRefreshToken = jwtService.issueRefreshToken(user);
 
         refreshTokenService.store(jwtService.extractJti(newRefreshToken), userId,
-                Instant.now().plusSeconds(REFRESH_TOKEN_MAX_AGE_SECONDS));
+                Instant.now().plusSeconds(REFRESH_TOKEN_MAX_AGE_SECONDS), storedToken.getFamilyId());
 
         ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", newRefreshToken)
                 .httpOnly(true)
@@ -82,10 +92,12 @@ public class AuthController {
     public ResponseEntity<Void> logout(
             @CookieValue(name = "refresh_token", required = false) String refreshToken,
             HttpServletResponse response) {
-        if (refreshToken != null) {
+        if (refreshToken != null && jwtService.isValidRefreshToken(refreshToken)) {
             try {
-                refreshTokenService.revoke(jwtService.extractJti(refreshToken));
-            } catch (Exception ignored) {}
+                refreshTokenService.validateAndRevoke(jwtService.extractJti(refreshToken));
+            } catch (InvalidRefreshTokenException e) {
+                log.debug("Logout with invalid refresh token: {}", e.getMessage());
+            }
         }
         ResponseCookie cookie = ResponseCookie.from("refresh_token", "")
                 .httpOnly(true)

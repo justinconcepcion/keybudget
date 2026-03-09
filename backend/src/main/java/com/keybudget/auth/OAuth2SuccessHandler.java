@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.UUID;
 
 @Component
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
@@ -60,7 +61,8 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String refreshToken = jwtService.issueRefreshToken(user);
 
         String jti = jwtService.extractJti(refreshToken);
-        refreshTokenService.store(jti, user.getId(), Instant.now().plusSeconds(7 * 24 * 3600));
+        String familyId = UUID.randomUUID().toString();
+        refreshTokenService.store(jti, user.getId(), Instant.now().plusSeconds(7 * 24 * 3600), familyId);
 
         // Refresh token: HttpOnly cookie — not accessible to JavaScript
         ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", refreshToken)

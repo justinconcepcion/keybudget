@@ -9,18 +9,20 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AuthController.class)
 @Import(SecurityConfig.class)
-@org.springframework.test.context.TestPropertySource(properties = "app.cookie.secure=false")
+@TestPropertySource(properties = "app.cookie.secure=false")
 class AuthControllerTest {
 
     @Autowired
@@ -50,11 +52,12 @@ class AuthControllerTest {
         User user = new User();
         RefreshToken storedToken = new RefreshToken();
         storedToken.setUserId(1L);
+        storedToken.setFamilyId("family-1");
         when(jwtService.isValidRefreshToken("valid-refresh-token")).thenReturn(true);
         when(jwtService.extractUserId("valid-refresh-token")).thenReturn(1L);
         when(userService.findById(1L)).thenReturn(user);
         when(jwtService.extractJti("valid-refresh-token")).thenReturn("old-jti");
-        when(refreshTokenService.validate("old-jti")).thenReturn(storedToken);
+        when(refreshTokenService.validateAndRevoke("old-jti")).thenReturn(storedToken);
         when(jwtService.issueAccessToken(any())).thenReturn("new-access-token");
         when(jwtService.issueRefreshToken(any())).thenReturn("new-refresh-token");
         when(jwtService.extractJti("new-refresh-token")).thenReturn("new-jti");
@@ -67,6 +70,8 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.refreshToken").doesNotExist())
                 .andExpect(header().string("Set-Cookie", containsString("refresh_token=new-refresh-token")))
                 .andExpect(header().string("Set-Cookie", containsString("Path=/api/v1/auth/")));
+
+        verify(refreshTokenService).store(eq("new-jti"), eq(1L), any(), eq("family-1"));
     }
 
     @Test
@@ -86,15 +91,29 @@ class AuthControllerTest {
 
     @Test
     void refresh_givenRevokedToken_401() throws Exception {
-        User user = new User();
         when(jwtService.isValidRefreshToken("valid-refresh-token")).thenReturn(true);
         when(jwtService.extractUserId("valid-refresh-token")).thenReturn(1L);
-        when(userService.findById(1L)).thenReturn(user);
+        when(userService.findById(1L)).thenReturn(new User());
         when(jwtService.extractJti("valid-refresh-token")).thenReturn("jti");
-        when(refreshTokenService.validate("jti")).thenThrow(new IllegalArgumentException("revoked"));
+        when(refreshTokenService.validateAndRevoke("jti"))
+                .thenThrow(new InvalidRefreshTokenException("Refresh token has been revoked"));
 
         mockMvc.perform(post("/api/v1/auth/refresh")
                         .cookie(new jakarta.servlet.http.Cookie("refresh_token", "valid-refresh-token")))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void refresh_givenReusedToken_401() throws Exception {
+        when(jwtService.isValidRefreshToken("reused-token")).thenReturn(true);
+        when(jwtService.extractUserId("reused-token")).thenReturn(1L);
+        when(userService.findById(1L)).thenReturn(new User());
+        when(jwtService.extractJti("reused-token")).thenReturn("jti");
+        when(refreshTokenService.validateAndRevoke("jti"))
+                .thenThrow(new InvalidRefreshTokenException("Refresh token already consumed"));
+
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .cookie(new jakarta.servlet.http.Cookie("refresh_token", "reused-token")))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -105,6 +124,8 @@ class AuthControllerTest {
     @Test
     void logout_givenCookiePresent_204AndCookieCleared() throws Exception {
         when(jwtService.extractJti("some-token")).thenReturn("jti");
+        RefreshToken storedToken = new RefreshToken();
+        when(refreshTokenService.validateAndRevoke("jti")).thenReturn(storedToken);
 
         mockMvc.perform(post("/api/v1/auth/logout")
                         .cookie(new jakarta.servlet.http.Cookie("refresh_token", "some-token")))
