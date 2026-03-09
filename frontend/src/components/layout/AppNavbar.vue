@@ -1,10 +1,10 @@
 <template>
   <header
-    class="flex items-center justify-between px-4 h-14 border-b border-gray-200 bg-white lg:hidden"
+    class="flex items-center justify-between px-4 h-14 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 lg:hidden"
   >
     <!-- Mobile hamburger -->
     <button
-      class="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+      class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
       @click="emit('toggle-sidebar')"
     >
       <svg
@@ -39,7 +39,7 @@
           />
         </svg>
       </div>
-      <span class="text-sm font-bold text-gray-900">KeyBudget</span>
+      <span class="text-sm font-bold text-gray-900 dark:text-white">KeyBudget</span>
     </div>
 
     <!-- Avatar -->

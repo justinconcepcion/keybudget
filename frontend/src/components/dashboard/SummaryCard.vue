@@ -1,7 +1,7 @@
 <template>
-  <div class="bg-white rounded-2xl border border-gray-200 p-5">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5">
     <div class="flex items-center justify-between mb-3">
-      <p class="text-sm font-medium text-gray-500">
+      <p class="text-sm font-medium text-gray-500 dark:text-gray-400">
         {{ label }}
       </p>
       <div :class="['flex items-center justify-center w-9 h-9 rounded-xl', iconBg]">
@@ -82,7 +82,7 @@
         </svg>
       </div>
     </div>
-    <p class="text-2xl font-bold text-gray-900">
+    <p class="text-2xl font-bold text-gray-900 dark:text-white">
       {{ value }}
     </p>
     <p
