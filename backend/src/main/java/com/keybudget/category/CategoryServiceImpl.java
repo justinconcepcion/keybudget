@@ -5,7 +5,6 @@ import com.keybudget.category.dto.CreateCategoryRequest;
 import com.keybudget.category.dto.UpdateCategoryRequest;
 import com.keybudget.shared.ResourceNotFoundException;
 import com.keybudget.transaction.TransactionRepository;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,11 +25,6 @@ public class CategoryServiceImpl implements CategoryService {
         this.transactionRepository = transactionRepository;
     }
 
-    /**
-     * Seeds system-default categories on startup when none exist yet.
-     * Idempotent — skipped if defaults are already present.
-     */
-    @PostConstruct
     @Transactional
     public void seedDefaults() {
         if (categoryRepository.existsByUserIdIsNull()) {
