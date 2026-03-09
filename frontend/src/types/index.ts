@@ -71,6 +71,14 @@ export interface CreateTransactionRequest {
   categoryId: number
 }
 
+export interface UpdateTransactionRequest {
+  amount: number
+  description?: string
+  date: string
+  type: 'INCOME' | 'EXPENSE'
+  categoryId: number
+}
+
 export interface CategoryTotal {
   categoryId: number
   categoryName: string
