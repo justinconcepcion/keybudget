@@ -34,8 +34,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+        log.warn("Bad request: {}", ex.getMessage());
         return ResponseEntity.badRequest()
-                .body(ErrorResponse.of("BAD_REQUEST", ex.getMessage()));
+                .body(ErrorResponse.of("BAD_REQUEST", "Invalid request parameters"));
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -62,7 +63,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleProvider(ProviderException ex) {
         log.error("Provider error [{}]: {}", ex.getProviderType(), ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
-                .body(ErrorResponse.of("PROVIDER_ERROR", ex.getMessage()));
+                .body(ErrorResponse.of("PROVIDER_ERROR",
+                        "External provider error. Please try again later."));
     }
 
     @ExceptionHandler(UnsupportedOperationException.class)

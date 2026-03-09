@@ -173,8 +173,9 @@ public class IntegrationOrchestrationServiceImpl implements IntegrationOrchestra
         accounts.forEach(a -> a.setActive(false));
         accountRepository.saveAll(accounts);
 
-        // Mark credential as revoked rather than deleting — preserves audit trail
+        // Mark credential as revoked and clear sensitive data
         credential.setStatus(SyncStatus.REVOKED);
+        credential.setCredentialData(null);
         credentialRepository.save(credential);
 
         log.info("Disconnected provider {} for userId={}", credential.getProviderType(), userId);
@@ -231,14 +232,13 @@ public class IntegrationOrchestrationServiceImpl implements IntegrationOrchestra
         } catch (ProviderException ex) {
             log.error("Sync failed for provider {} userId={}: {}",
                     credential.getProviderType(), userId, ex.getMessage(), ex);
-            log.error("Full sync error for provider {} userId {}: {}", credential.getProviderType(), userId, ex.getMessage());
             credential.setStatus(SyncStatus.ERROR);
             credential.setErrorMessage(truncate(ex.getMessage(), 500));
             credentialRepository.save(credential);
 
             return new SyncResultResponse(
                     credential.getProviderType(), syncedAt, 0,
-                    SyncStatus.ERROR, truncate(ex.getMessage(), 500));
+                    SyncStatus.ERROR, "Sync failed. Please try again or reconnect the provider.");
         }
     }
 

@@ -2,6 +2,8 @@ package com.keybudget.integration;
 
 import com.keybudget.integration.dto.*;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -103,7 +105,7 @@ public class IntegrationController {
     @GetMapping("/net-worth/history")
     public ResponseEntity<NetWorthHistoryResponse> getNetWorthHistory(
             @AuthenticationPrincipal Jwt jwt,
-            @RequestParam(defaultValue = "30") int days) {
+            @RequestParam(defaultValue = "30") @Min(1) @Max(365) int days) {
         Long userId = jwt.getClaim("userId");
         return ResponseEntity.ok(orchestrationService.getNetWorthHistory(userId, days));
     }

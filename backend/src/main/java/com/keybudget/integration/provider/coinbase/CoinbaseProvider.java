@@ -61,6 +61,7 @@ public class CoinbaseProvider implements IntegrationProvider {
     private static final String ACCOUNTS_PATH = "/v2/accounts";
     private static final String HMAC_ALGORITHM = "HmacSHA256";
     private static final Duration API_TIMEOUT = Duration.ofSeconds(10);
+    private static final int MAX_PAGINATION_PAGES = 50;
 
     private final WebClient coinbaseClient;
     private final ObjectMapper objectMapper;
@@ -187,16 +188,51 @@ public class CoinbaseProvider implements IntegrationProvider {
     private List<CoinbaseAccount> fetchAllAccounts(String apiKey, String apiSecret) {
         List<CoinbaseAccount> allAccounts = new ArrayList<>();
         String nextPath = ACCOUNTS_PATH;
+        int pageCount = 0;
 
         while (nextPath != null) {
+            if (++pageCount > MAX_PAGINATION_PAGES) {
+                log.warn("Coinbase pagination exceeded {} pages, stopping", MAX_PAGINATION_PAGES);
+                break;
+            }
             CoinbaseAccountsResponse page = fetchAccountsPage(apiKey, apiSecret, nextPath);
             if (page.data() != null) {
                 allAccounts.addAll(page.data());
             }
-            nextPath = (page.pagination() != null) ? page.pagination().nextUri() : null;
+            nextPath = (page.pagination() != null)
+                    ? validateNextUri(page.pagination().nextUri())
+                    : null;
         }
 
         return allAccounts;
+    }
+
+    /**
+     * Validates that a pagination nextUri is a safe Coinbase API path.
+     * Prevents SSRF by ensuring the URI starts with {@code /v2/accounts}.
+     *
+     * @param nextUri the raw nextUri from the Coinbase pagination response
+     * @return the validated path, or {@code null} if invalid
+     */
+    private String validateNextUri(String nextUri) {
+        if (nextUri == null || nextUri.isBlank()) {
+            return null;
+        }
+        // Strip scheme+host if Coinbase returns a full URL
+        String path = nextUri;
+        if (path.startsWith("http://") || path.startsWith("https://")) {
+            int pathStart = path.indexOf('/', path.indexOf("//") + 2);
+            if (pathStart < 0) {
+                log.warn("Coinbase returned nextUri with no path: {}", nextUri);
+                return null;
+            }
+            path = path.substring(pathStart);
+        }
+        if (!path.startsWith("/v2/accounts")) {
+            log.warn("Coinbase returned unexpected nextUri path: {}", path);
+            return null;
+        }
+        return path;
     }
 
     /**

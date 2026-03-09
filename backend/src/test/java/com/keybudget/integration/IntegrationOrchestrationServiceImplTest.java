@@ -339,12 +339,13 @@ class IntegrationOrchestrationServiceImplTest {
 
             assertThat(result.status()).isEqualTo(SyncStatus.ERROR);
             assertThat(result.accountsUpdated()).isZero();
-            assertThat(result.errorMessage()).contains("Blockstream timed out");
+            assertThat(result.errorMessage()).isEqualTo("Sync failed. Please try again or reconnect the provider.");
 
             ArgumentCaptor<IntegrationCredential> captor =
                     ArgumentCaptor.forClass(IntegrationCredential.class);
             verify(credentialRepository).save(captor.capture());
             assertThat(captor.getValue().getStatus()).isEqualTo(SyncStatus.ERROR);
+            assertThat(captor.getValue().getErrorMessage()).contains("Blockstream timed out");
         }
 
         @Test

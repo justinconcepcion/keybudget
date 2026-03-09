@@ -2,6 +2,8 @@ package com.keybudget.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.codec.ClientCodecConfigurer;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
@@ -15,6 +17,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 public class WebClientConfig {
 
+    private static final int MAX_IN_MEMORY_SIZE = 512 * 1024; // 512 KB
+
     /**
      * Provides a pre-configured {@link WebClient.Builder} that provider implementations
      * inject and use to construct their own {@link WebClient} instances with provider-specific
@@ -25,6 +29,10 @@ public class WebClientConfig {
      */
     @Bean
     public WebClient.Builder webClientBuilder() {
-        return WebClient.builder();
+        return WebClient.builder()
+                .exchangeStrategies(ExchangeStrategies.builder()
+                        .codecs(configurer -> configurer.defaultCodecs()
+                                .maxInMemorySize(MAX_IN_MEMORY_SIZE))
+                        .build());
     }
 }
