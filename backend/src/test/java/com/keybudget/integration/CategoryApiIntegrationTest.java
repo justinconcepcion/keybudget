@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
@@ -27,6 +28,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
+@TestPropertySource(properties = {
+        "spring.security.oauth2.client.registration.google.client-id=test-client-id",
+        "spring.security.oauth2.client.registration.google.client-secret=test-client-secret",
+        "spring.security.oauth2.client.registration.google.scope=openid,email,profile"
+})
 class CategoryApiIntegrationTest {
 
     @Autowired
