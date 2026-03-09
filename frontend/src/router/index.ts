@@ -42,6 +42,16 @@ const router = createRouter({
           component: () => import('@/views/BudgetsView.vue'),
         },
         {
+          path: 'net-worth',
+          name: 'net-worth',
+          component: () => import('@/views/NetWorthView.vue'),
+        },
+        {
+          path: 'accounts',
+          name: 'accounts',
+          component: () => import('@/views/AccountsView.vue'),
+        },
+        {
           path: 'settings',
           name: 'settings',
           component: () => import('@/views/SettingsView.vue'),
