@@ -41,14 +41,14 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
         if (token.isRevoked()) {
             log.warn("Refresh token reuse detected for familyId={}, userId={}", token.getFamilyId(), token.getUserId());
-            refreshTokenRepository.revokeAllActiveByFamilyId(token.getFamilyId());
+            refreshTokenRepository.revokeAllActiveByFamilyId(token.getFamilyId(), Instant.now());
             throw new InvalidRefreshTokenException("Refresh token has been revoked");
         }
 
-        int updated = refreshTokenRepository.revokeIfActive(jti);
+        int updated = refreshTokenRepository.revokeIfActive(jti, Instant.now());
         if (updated == 0) {
             log.warn("Concurrent refresh token use detected for jti={}", jti);
-            refreshTokenRepository.revokeAllActiveByFamilyId(token.getFamilyId());
+            refreshTokenRepository.revokeAllActiveByFamilyId(token.getFamilyId(), Instant.now());
             throw new InvalidRefreshTokenException("Refresh token already consumed");
         }
 
@@ -58,14 +58,14 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Override
     @Transactional
     public void revokeFamily(String familyId) {
-        int revoked = refreshTokenRepository.revokeAllActiveByFamilyId(familyId);
+        int revoked = refreshTokenRepository.revokeAllActiveByFamilyId(familyId, Instant.now());
         log.info("Revoked {} tokens in familyId={}", revoked, familyId);
     }
 
     @Override
     @Transactional
     public void revokeAllForUser(Long userId) {
-        int revoked = refreshTokenRepository.revokeAllActiveByUserId(userId);
+        int revoked = refreshTokenRepository.revokeAllActiveByUserId(userId, Instant.now());
         log.info("Revoked {} tokens for userId={}", revoked, userId);
     }
 

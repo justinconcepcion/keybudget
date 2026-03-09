@@ -11,6 +11,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -59,12 +60,12 @@ class RefreshTokenServiceImplTest {
         token.setFamilyId("family-1");
         token.setExpiresAt(Instant.now().plusSeconds(3600));
         when(refreshTokenRepository.findByJti("jti")).thenReturn(Optional.of(token));
-        when(refreshTokenRepository.revokeIfActive("jti")).thenReturn(1);
+        when(refreshTokenRepository.revokeIfActive(eq("jti"), any(Instant.class))).thenReturn(1);
 
         RefreshToken result = refreshTokenService.validateAndRevoke("jti");
 
         assertThat(result).isSameAs(token);
-        verify(refreshTokenRepository).revokeIfActive("jti");
+        verify(refreshTokenRepository).revokeIfActive(eq("jti"), any(Instant.class));
     }
 
     @Test
@@ -102,7 +103,7 @@ class RefreshTokenServiceImplTest {
                 .isInstanceOf(InvalidRefreshTokenException.class)
                 .hasMessageContaining("revoked");
 
-        verify(refreshTokenRepository).revokeAllActiveByFamilyId("family-1");
+        verify(refreshTokenRepository).revokeAllActiveByFamilyId(eq("family-1"), any(Instant.class));
     }
 
     @Test
@@ -112,13 +113,13 @@ class RefreshTokenServiceImplTest {
         token.setFamilyId("family-1");
         token.setExpiresAt(Instant.now().plusSeconds(3600));
         when(refreshTokenRepository.findByJti("jti")).thenReturn(Optional.of(token));
-        when(refreshTokenRepository.revokeIfActive("jti")).thenReturn(0);
+        when(refreshTokenRepository.revokeIfActive(eq("jti"), any(Instant.class))).thenReturn(0);
 
         assertThatThrownBy(() -> refreshTokenService.validateAndRevoke("jti"))
                 .isInstanceOf(InvalidRefreshTokenException.class)
                 .hasMessageContaining("already consumed");
 
-        verify(refreshTokenRepository).revokeAllActiveByFamilyId("family-1");
+        verify(refreshTokenRepository).revokeAllActiveByFamilyId(eq("family-1"), any(Instant.class));
     }
 
     // -------------------------------------------------------------------------
@@ -127,11 +128,11 @@ class RefreshTokenServiceImplTest {
 
     @Test
     void revokeFamily_givenFamilyId_revokesAllActiveInFamily() {
-        when(refreshTokenRepository.revokeAllActiveByFamilyId("family-1")).thenReturn(3);
+        when(refreshTokenRepository.revokeAllActiveByFamilyId(eq("family-1"), any(Instant.class))).thenReturn(3);
 
         refreshTokenService.revokeFamily("family-1");
 
-        verify(refreshTokenRepository).revokeAllActiveByFamilyId("family-1");
+        verify(refreshTokenRepository).revokeAllActiveByFamilyId(eq("family-1"), any(Instant.class));
     }
 
     // -------------------------------------------------------------------------
@@ -140,11 +141,11 @@ class RefreshTokenServiceImplTest {
 
     @Test
     void revokeAllForUser_givenUserId_revokesAllActive() {
-        when(refreshTokenRepository.revokeAllActiveByUserId(1L)).thenReturn(2);
+        when(refreshTokenRepository.revokeAllActiveByUserId(eq(1L), any(Instant.class))).thenReturn(2);
 
         refreshTokenService.revokeAllForUser(1L);
 
-        verify(refreshTokenRepository).revokeAllActiveByUserId(1L);
+        verify(refreshTokenRepository).revokeAllActiveByUserId(eq(1L), any(Instant.class));
     }
 
     // -------------------------------------------------------------------------
