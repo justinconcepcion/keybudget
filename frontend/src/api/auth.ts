@@ -2,7 +2,7 @@ import axios from 'axios'
 import type { AuthTokens } from '@/types'
 
 // Separate instance — does NOT go through the auth interceptor to avoid circular refresh loops
-const raw = axios.create({ baseURL: '/api/v1' })
+const raw = axios.create({ baseURL: '/api/v1', withCredentials: true })
 
 export const authApi = {
   /**
