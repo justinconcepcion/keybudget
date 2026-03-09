@@ -1,5 +1,6 @@
 package com.keybudget.budget;
 
+import com.keybudget.budget.dto.BudgetAlertResponse;
 import com.keybudget.budget.dto.BudgetResponse;
 import com.keybudget.budget.dto.CreateBudgetRequest;
 import com.keybudget.budget.dto.UpdateBudgetRequest;
@@ -52,4 +53,12 @@ public interface BudgetService {
      * @param budgetId the budget primary key
      */
     void deleteBudget(Long userId, Long budgetId);
+
+    /**
+     * Returns budget alerts for the current month where spending is at or above 80%.
+     *
+     * @param userId the authenticated user's id
+     * @return list of budget alerts sorted by percentage used descending
+     */
+    List<BudgetAlertResponse> getAlerts(Long userId);
 }

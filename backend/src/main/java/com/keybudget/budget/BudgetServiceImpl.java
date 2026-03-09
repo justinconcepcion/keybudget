@@ -1,5 +1,6 @@
 package com.keybudget.budget;
 
+import com.keybudget.budget.dto.BudgetAlertResponse;
 import com.keybudget.budget.dto.BudgetResponse;
 import com.keybudget.budget.dto.CreateBudgetRequest;
 import com.keybudget.budget.dto.UpdateBudgetRequest;
@@ -11,8 +12,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -113,6 +116,43 @@ public class BudgetServiceImpl implements BudgetService {
         }
 
         budgetRepository.delete(budget);
+    }
+
+    private static final int WARNING_THRESHOLD = 80;
+    private static final int EXCEEDED_THRESHOLD = 100;
+
+    /** {@inheritDoc} */
+    @Override
+    @Transactional(readOnly = true)
+    public List<BudgetAlertResponse> getAlerts(Long userId) {
+        YearMonth currentMonth = YearMonth.now();
+        List<Budget> budgets = budgetRepository.findByUserIdAndMonthYear(userId, currentMonth);
+        Map<Long, Category> categoryMap = buildCategoryMap(userId);
+
+        LocalDate start = currentMonth.atDay(1);
+        LocalDate end = currentMonth.atEndOfMonth();
+        Map<Long, BigDecimal> spentByCategory = buildSpentMap(userId, start, end);
+
+        return budgets.stream()
+                .map(b -> {
+                    BigDecimal spent = spentByCategory.getOrDefault(b.getCategoryId(), BigDecimal.ZERO);
+                    int pct = b.getLimitAmount().compareTo(BigDecimal.ZERO) > 0
+                            ? spent.multiply(BigDecimal.valueOf(100))
+                                    .divide(b.getLimitAmount(), 0, RoundingMode.HALF_UP)
+                                    .intValue()
+                            : 0;
+                    Category cat = categoryMap.get(b.getCategoryId());
+                    String catName = cat != null ? cat.getName() : "Unknown";
+                    String catColor = cat != null ? cat.getColor() : null;
+                    BudgetAlertResponse.AlertLevel level = pct >= EXCEEDED_THRESHOLD
+                            ? BudgetAlertResponse.AlertLevel.EXCEEDED
+                            : BudgetAlertResponse.AlertLevel.WARNING;
+                    return new BudgetAlertResponse(b.getId(), b.getCategoryId(), catName, catColor,
+                            b.getLimitAmount(), spent, pct, level);
+                })
+                .filter(a -> a.percentUsed() >= WARNING_THRESHOLD)
+                .sorted(Comparator.comparingInt(BudgetAlertResponse::percentUsed).reversed())
+                .toList();
     }
 
     // -------------------------------------------------------------------------
