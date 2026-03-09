@@ -49,14 +49,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleProviderAuth(ProviderAuthException ex) {
         log.warn("Provider auth failure [{}]: {}", ex.getProviderType(), ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ErrorResponse.of("PROVIDER_AUTH_ERROR", ex.getMessage()));
+                .body(ErrorResponse.of("PROVIDER_AUTH_ERROR",
+                        "Provider authentication failed. Please reconnect."));
     }
 
     @ExceptionHandler(ProviderRateLimitException.class)
     public ResponseEntity<ErrorResponse> handleProviderRateLimit(ProviderRateLimitException ex) {
         log.warn("Provider rate limit [{}]: {}", ex.getProviderType(), ex.getMessage());
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                .body(ErrorResponse.of("PROVIDER_RATE_LIMIT", ex.getMessage()));
+                .body(ErrorResponse.of("PROVIDER_RATE_LIMIT",
+                        "Rate limit exceeded. Please try again later."));
     }
 
     @ExceptionHandler(ProviderException.class)

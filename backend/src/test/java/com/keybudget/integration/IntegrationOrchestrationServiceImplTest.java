@@ -263,6 +263,7 @@ class IntegrationOrchestrationServiceImplTest {
                     ArgumentCaptor.forClass(IntegrationCredential.class);
             verify(credentialRepository).save(captor.capture());
             assertThat(captor.getValue().getStatus()).isEqualTo(SyncStatus.REVOKED);
+            assertThat(captor.getValue().getCredentialData()).isNull();
         }
 
         @Test

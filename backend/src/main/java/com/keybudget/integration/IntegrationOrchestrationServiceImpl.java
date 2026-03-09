@@ -233,7 +233,8 @@ public class IntegrationOrchestrationServiceImpl implements IntegrationOrchestra
             log.error("Sync failed for provider {} userId={}: {}",
                     credential.getProviderType(), userId, ex.getMessage(), ex);
             credential.setStatus(SyncStatus.ERROR);
-            credential.setErrorMessage(truncate(ex.getMessage(), 500));
+            String rawMessage = ex.getMessage() != null ? ex.getMessage() : "Unknown error";
+            credential.setErrorMessage(truncate(rawMessage, 500));
             credentialRepository.save(credential);
 
             return new SyncResultResponse(
