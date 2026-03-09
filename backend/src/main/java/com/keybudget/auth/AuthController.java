@@ -47,9 +47,15 @@ public class AuthController {
         User user = userService.findById(userId);
 
         String oldJti = jwtService.extractJti(refreshToken);
+        RefreshToken storedToken;
         try {
-            refreshTokenService.validate(oldJti);
+            storedToken = refreshTokenService.validate(oldJti);
         } catch (IllegalArgumentException e) {
+            // Possible token theft — revoke all tokens for this user
+            refreshTokenService.revokeAllForUser(userId);
+            return ResponseEntity.status(401).build();
+        }
+        if (!storedToken.getUserId().equals(userId)) {
             return ResponseEntity.status(401).build();
         }
         refreshTokenService.revoke(oldJti);

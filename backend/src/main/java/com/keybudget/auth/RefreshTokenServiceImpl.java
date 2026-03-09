@@ -33,7 +33,16 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         if (token.isRevoked()) {
             throw new IllegalArgumentException("Refresh token has been revoked");
         }
+        if (token.getExpiresAt().isBefore(Instant.now())) {
+            throw new IllegalArgumentException("Refresh token has expired");
+        }
         return token;
+    }
+
+    @Override
+    @Transactional
+    public void revokeAllForUser(Long userId) {
+        refreshTokenRepository.deleteByUserId(userId);
     }
 
     @Override

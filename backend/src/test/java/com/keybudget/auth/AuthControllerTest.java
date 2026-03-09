@@ -48,10 +48,13 @@ class AuthControllerTest {
     @Test
     void refresh_givenValidCookie_200() throws Exception {
         User user = new User();
+        RefreshToken storedToken = new RefreshToken();
+        storedToken.setUserId(1L);
         when(jwtService.isValidRefreshToken("valid-refresh-token")).thenReturn(true);
         when(jwtService.extractUserId("valid-refresh-token")).thenReturn(1L);
         when(userService.findById(1L)).thenReturn(user);
         when(jwtService.extractJti("valid-refresh-token")).thenReturn("old-jti");
+        when(refreshTokenService.validate("old-jti")).thenReturn(storedToken);
         when(jwtService.issueAccessToken(any())).thenReturn("new-access-token");
         when(jwtService.issueRefreshToken(any())).thenReturn("new-refresh-token");
         when(jwtService.extractJti("new-refresh-token")).thenReturn("new-jti");

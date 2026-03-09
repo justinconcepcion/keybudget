@@ -61,7 +61,8 @@ public class TransactionController {
         LocalDate effectiveStart = start != null ? start : LocalDate.now().withDayOfMonth(1);
         LocalDate effectiveEnd = end != null ? end : LocalDate.now();
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date", "id"));
+        int effectiveSize = Math.min(size, 100);
+        Pageable pageable = PageRequest.of(page, effectiveSize, Sort.by(Sort.Direction.DESC, "date", "id"));
 
         return ResponseEntity.ok(
                 transactionService.getTransactions(userId, effectiveStart, effectiveEnd, categoryId, type, pageable));

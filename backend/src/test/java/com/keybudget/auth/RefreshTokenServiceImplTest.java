@@ -46,6 +46,7 @@ class RefreshTokenServiceImplTest {
     void validate_givenActiveJti_returnsToken() {
         RefreshToken token = new RefreshToken();
         token.setJti("jti");
+        token.setExpiresAt(Instant.now().plusSeconds(3600));
         when(refreshTokenRepository.findByJti("jti")).thenReturn(Optional.of(token));
 
         RefreshToken result = refreshTokenService.validate("jti");
@@ -72,6 +73,25 @@ class RefreshTokenServiceImplTest {
         assertThatThrownBy(() -> refreshTokenService.validate("jti"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Refresh token has been revoked");
+    }
+
+    @Test
+    void validate_givenExpiredJti_throwsIllegalArgument() {
+        RefreshToken token = new RefreshToken();
+        token.setJti("jti");
+        token.setExpiresAt(Instant.now().minusSeconds(3600));
+        when(refreshTokenRepository.findByJti("jti")).thenReturn(Optional.of(token));
+
+        assertThatThrownBy(() -> refreshTokenService.validate("jti"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Refresh token has expired");
+    }
+
+    @Test
+    void revokeAllForUser_givenUserId_deletesAll() {
+        refreshTokenService.revokeAllForUser(1L);
+
+        verify(refreshTokenRepository).deleteByUserId(1L);
     }
 
     @Test
