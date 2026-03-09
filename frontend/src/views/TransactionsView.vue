@@ -9,6 +9,16 @@
           Track every dollar in and out.
         </p>
       </div>
+      <div class="flex items-center gap-2">
+      <button
+        class="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        @click="showImportModal = true"
+      >
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+        </svg>
+        Import CSV
+      </button>
       <button
         class="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
         @click="showAddModal = true"
@@ -28,6 +38,75 @@
         </svg>
         Add Transaction
       </button>
+      </div>
+    </div>
+
+    <!-- Import CSV Modal -->
+    <div
+      v-if="showImportModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      @click.self="showImportModal = false"
+    >
+      <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-xl">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Import CSV
+        </h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          Upload a CSV file with columns: Date, Description, Amount.
+          Negative amounts are treated as expenses, positive as income.
+        </p>
+        <input
+          ref="csvFileInput"
+          type="file"
+          accept=".csv"
+          class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+          @change="onCsvFileSelected"
+        >
+        <div
+          v-if="importResult"
+          class="mt-4 p-3 rounded-lg text-sm"
+          :class="importResult.errors.length > 0 ? 'bg-yellow-50 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-200' : 'bg-green-50 dark:bg-green-950 text-green-800 dark:text-green-200'"
+        >
+          <p class="font-medium">
+            Imported {{ importResult.importedCount }} of {{ importResult.totalRows }} rows
+          </p>
+          <ul
+            v-if="importResult.errors.length > 0"
+            class="mt-2 list-disc list-inside text-xs"
+          >
+            <li
+              v-for="(err, i) in importResult.errors.slice(0, 5)"
+              :key="i"
+            >
+              {{ err }}
+            </li>
+            <li v-if="importResult.errors.length > 5">
+              ...and {{ importResult.errors.length - 5 }} more
+            </li>
+          </ul>
+        </div>
+        <div
+          v-if="importError"
+          class="mt-4 p-3 bg-red-50 dark:bg-red-950 text-red-800 dark:text-red-200 rounded-lg text-sm"
+        >
+          {{ importError }}
+        </div>
+        <div class="flex justify-end gap-2 mt-6">
+          <button
+            class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800"
+            @click="showImportModal = false"
+          >
+            Close
+          </button>
+          <button
+            :disabled="!csvFile || importingCsv"
+            class="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors"
+            @click="submitCsvImport"
+          >
+            {{ importingCsv ? 'Importing...' : 'Import' }}
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Filters -->
@@ -582,8 +661,9 @@
   import { ref, computed, reactive, watch, onMounted } from 'vue'
   import { useTransactionsStore } from '@/stores/transactions'
   import { useCategoriesStore } from '@/stores/categories'
+  import { transactionsApi } from '@/api/transactions'
   import { formatMoney, formatDate } from '@/utils/formatting'
-  import type { TransactionResponse } from '@/types'
+  import type { TransactionResponse, CsvImportResult } from '@/types'
 
   const transactionsStore = useTransactionsStore()
   const categoriesStore = useCategoriesStore()
@@ -592,6 +672,46 @@
   const showAddModal = ref(false)
   const submitting = ref(false)
   const formError = ref('')
+
+  // ── CSV Import ──────────────────────────────────────────────────────────────
+  const showImportModal = ref(false)
+  const csvFile = ref<File | null>(null)
+  const csvFileInput = ref<HTMLInputElement | null>(null)
+  const importingCsv = ref(false)
+  const importResult = ref<CsvImportResult | null>(null)
+  const importError = ref('')
+
+  function onCsvFileSelected(e: Event) {
+    const input = e.target as HTMLInputElement
+    csvFile.value = input.files?.[0] ?? null
+    importResult.value = null
+    importError.value = ''
+  }
+
+  async function submitCsvImport() {
+    if (!csvFile.value) return
+    importingCsv.value = true
+    importResult.value = null
+    importError.value = ''
+    try {
+      importResult.value = await transactionsApi.importCsv(csvFile.value)
+      if (importResult.value.importedCount > 0) {
+        await loadTransactions(0)
+      }
+    } catch {
+      importError.value = 'Failed to import CSV. Please check the file format.'
+    } finally {
+      importingCsv.value = false
+    }
+  }
+
+  watch(showImportModal, (open) => {
+    if (open) {
+      csvFile.value = null
+      importResult.value = null
+      importError.value = ''
+    }
+  })
 
   // ── Filters ──────────────────────────────────────────────────────────────
 
