@@ -23,6 +23,9 @@ public class User {
     @Column(name = "picture_url")
     private String pictureUrl;
 
+    @Column(name = "preferred_currency", nullable = false, length = 3)
+    private String preferredCurrency = "USD";
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -36,10 +39,12 @@ public class User {
     public String getEmail() { return email; }
     public String getName() { return name; }
     public String getPictureUrl() { return pictureUrl; }
+    public String getPreferredCurrency() { return preferredCurrency; }
     public Instant getCreatedAt() { return createdAt; }
 
     public void setGoogleSub(String googleSub) { this.googleSub = googleSub; }
     public void setEmail(String email) { this.email = email; }
     public void setName(String name) { this.name = name; }
     public void setPictureUrl(String pictureUrl) { this.pictureUrl = pictureUrl; }
+    public void setPreferredCurrency(String preferredCurrency) { this.preferredCurrency = preferredCurrency; }
 }
