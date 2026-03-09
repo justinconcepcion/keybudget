@@ -107,6 +107,13 @@ export interface MonthlySummaryResponse {
   byCategory: CategoryTotal[]
 }
 
+export interface CsvImportResult {
+  totalRows: number
+  importedCount: number
+  skippedCount: number
+  errors: string[]
+}
+
 // ── Budgets ──────────────────────────────────────────────────────────────────
 
 export interface BudgetResponse {

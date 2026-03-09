@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.keybudget.transaction.dto.CategoryTotal;
 import com.keybudget.shared.ResourceNotFoundException;
 import com.keybudget.transaction.dto.CreateTransactionRequest;
+import com.keybudget.transaction.dto.CsvImportResult;
 import com.keybudget.transaction.dto.MonthlySummaryResponse;
 import com.keybudget.transaction.dto.TransactionResponse;
 import com.keybudget.transaction.dto.UpdateTransactionRequest;
@@ -14,9 +15,11 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
@@ -40,6 +43,52 @@ class TransactionControllerTest {
 
     @MockBean
     private TransactionService transactionService;
+
+    @MockBean
+    private CsvImportService csvImportService;
+
+    // -------------------------------------------------------------------------
+    // POST /api/v1/transactions/import
+    // -------------------------------------------------------------------------
+
+    @Test
+    void importCsv_givenValidFile_200() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "test.csv", "text/csv",
+                "Date,Description,Amount\n2026-03-01,Coffee,-5.50\n".getBytes(StandardCharsets.UTF_8));
+
+        when(csvImportService.importCsv(eq(1L), any(), isNull()))
+                .thenReturn(new CsvImportResult(1, 1, 0, List.of()));
+
+        mockMvc.perform(multipart("/api/v1/transactions/import")
+                        .file(file)
+                        .with(jwt().jwt(j -> j.claim("userId", 1L))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.importedCount").value(1))
+                .andExpect(jsonPath("$.totalRows").value(1));
+    }
+
+    @Test
+    void importCsv_givenNoJwt_401() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "test.csv", "text/csv",
+                "Date,Description,Amount\n".getBytes(StandardCharsets.UTF_8));
+
+        mockMvc.perform(multipart("/api/v1/transactions/import").file(file))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void importCsv_givenServiceThrows_500() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "test.csv", "text/csv",
+                "Date,Description,Amount\n2026-03-01,Coffee,-5.50\n".getBytes(StandardCharsets.UTF_8));
+
+        when(csvImportService.importCsv(eq(1L), any(), isNull()))
+                .thenThrow(new RuntimeException("DB error"));
+
+        mockMvc.perform(multipart("/api/v1/transactions/import")
+                        .file(file)
+                        .with(jwt().jwt(j -> j.claim("userId", 1L))))
+                .andExpect(status().isInternalServerError());
+    }
 
     // -------------------------------------------------------------------------
     // GET /api/v1/transactions

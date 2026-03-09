@@ -6,6 +6,7 @@ import type {
   CreateTransactionRequest,
   UpdateTransactionRequest,
   MonthlySummaryResponse,
+  CsvImportResult,
 } from '@/types'
 
 export const transactionsApi = {
@@ -28,6 +29,17 @@ export const transactionsApi = {
   getSummary(month: string): Promise<MonthlySummaryResponse> {
     return api
       .get<MonthlySummaryResponse>('/transactions/summary', { params: { month } })
+      .then((r) => r.data)
+  },
+
+  importCsv(file: File, categoryId?: number): Promise<CsvImportResult> {
+    const formData = new FormData()
+    formData.append('file', file)
+    if (categoryId) formData.append('categoryId', String(categoryId))
+    return api
+      .post<CsvImportResult>('/transactions/import', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
       .then((r) => r.data)
   },
 }
