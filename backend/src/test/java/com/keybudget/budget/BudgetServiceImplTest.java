@@ -59,12 +59,12 @@ class BudgetServiceImplTest {
         Category cat = buildCategory(5L, "Food", "#FF9800");
         Budget budget = buildBudget(10L, userId, 5L, month, new BigDecimal("500.00"));
 
-        Transaction expense = buildTransaction(userId, 5L, new BigDecimal("200.00"), TransactionType.EXPENSE);
-
         when(budgetRepository.findByUserIdAndMonthYear(userId, month)).thenReturn(List.of(budget));
         when(categoryRepository.findByUserIdOrUserIdIsNull(userId)).thenReturn(List.of(cat));
-        when(transactionRepository.findByUserIdAndCategoryIdAndDateBetween(userId, 5L, start, end))
-                .thenReturn(List.of(expense));
+        List<Object[]> spentRows = new java.util.ArrayList<>();
+        spentRows.add(new Object[]{5L, new BigDecimal("200.00")});
+        when(transactionRepository.sumExpensesByCategory(userId, start, end))
+                .thenReturn(spentRows);
 
         List<BudgetResponse> result = budgetService.getBudgets(userId, month);
 
@@ -102,7 +102,7 @@ class BudgetServiceImplTest {
 
         when(budgetRepository.findByUserIdAndMonthYear(userId, month)).thenReturn(List.of(budget));
         when(categoryRepository.findByUserIdOrUserIdIsNull(userId)).thenReturn(List.of(cat));
-        when(transactionRepository.findByUserIdAndCategoryIdAndDateBetween(userId, 5L, start, end))
+        when(transactionRepository.sumExpensesByCategory(userId, start, end))
                 .thenReturn(List.of());
 
         List<BudgetResponse> result = budgetService.getBudgets(userId, month);
@@ -126,8 +126,7 @@ class BudgetServiceImplTest {
 
         when(categoryRepository.findByUserIdOrUserIdIsNull(userId)).thenReturn(List.of(cat));
         when(budgetRepository.save(any(Budget.class))).thenReturn(saved);
-        when(transactionRepository.findByUserIdAndCategoryIdAndDateBetween(
-                eq(userId), eq(5L), any(LocalDate.class), any(LocalDate.class)))
+        when(transactionRepository.sumExpensesByCategory(eq(userId), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(List.of());
 
         BudgetResponse result = budgetService.createBudget(userId, req);
@@ -166,8 +165,7 @@ class BudgetServiceImplTest {
         when(budgetRepository.findById(10L)).thenReturn(Optional.of(budget));
         when(budgetRepository.save(budget)).thenReturn(updated);
         when(categoryRepository.findByUserIdOrUserIdIsNull(userId)).thenReturn(List.of(cat));
-        when(transactionRepository.findByUserIdAndCategoryIdAndDateBetween(
-                eq(userId), eq(5L), any(LocalDate.class), any(LocalDate.class)))
+        when(transactionRepository.sumExpensesByCategory(eq(userId), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(List.of());
 
         BudgetResponse result = budgetService.updateBudget(userId, 10L, req);

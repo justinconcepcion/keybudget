@@ -6,7 +6,6 @@ import com.keybudget.budget.dto.UpdateBudgetRequest;
 import com.keybudget.category.Category;
 import com.keybudget.category.CategoryRepository;
 import com.keybudget.transaction.TransactionRepository;
-import com.keybudget.transaction.TransactionType;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,8 +44,10 @@ public class BudgetServiceImpl implements BudgetService {
         LocalDate start = month.atDay(1);
         LocalDate end = month.atEndOfMonth();
 
+        Map<Long, BigDecimal> spentByCategory = buildSpentMap(userId, start, end);
+
         return budgets.stream()
-                .map(b -> toBudgetResponse(b, categoryMap, userId, start, end))
+                .map(b -> toBudgetResponse(b, categoryMap, spentByCategory))
                 .toList();
     }
 
@@ -71,7 +72,8 @@ public class BudgetServiceImpl implements BudgetService {
             Budget saved = budgetRepository.save(budget);
             LocalDate start = req.monthYear().atDay(1);
             LocalDate end = req.monthYear().atEndOfMonth();
-            return toBudgetResponse(saved, categoryMap, userId, start, end);
+            Map<Long, BigDecimal> spentMap = buildSpentMap(userId, start, end);
+            return toBudgetResponse(saved, categoryMap, spentMap);
         } catch (DataIntegrityViolationException ex) {
             throw new IllegalArgumentException(
                     "A budget already exists for this category and month");
@@ -95,7 +97,8 @@ public class BudgetServiceImpl implements BudgetService {
         Map<Long, Category> categoryMap = buildCategoryMap(userId);
         LocalDate start = saved.getMonthYear().atDay(1);
         LocalDate end = saved.getMonthYear().atEndOfMonth();
-        return toBudgetResponse(saved, categoryMap, userId, start, end);
+        Map<Long, BigDecimal> spentMap = buildSpentMap(userId, start, end);
+        return toBudgetResponse(saved, categoryMap, spentMap);
     }
 
     /** {@inheritDoc} */
@@ -121,27 +124,29 @@ public class BudgetServiceImpl implements BudgetService {
                 .collect(Collectors.toMap(Category::getId, c -> c));
     }
 
+    private Map<Long, BigDecimal> buildSpentMap(Long userId, LocalDate start, LocalDate end) {
+        return transactionRepository.sumExpensesByCategory(userId, start, end).stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (BigDecimal) row[1]
+                ));
+    }
+
     private BigDecimal computeSpent(Long userId, Long categoryId, LocalDate start, LocalDate end) {
-        return transactionRepository
-                .findByUserIdAndCategoryIdAndDateBetween(userId, categoryId, start, end)
-                .stream()
-                .filter(t -> t.getType() == TransactionType.EXPENSE)
-                .map(t -> t.getAmount())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        Map<Long, BigDecimal> spentMap = buildSpentMap(userId, start, end);
+        return spentMap.getOrDefault(categoryId, BigDecimal.ZERO);
     }
 
     private BudgetResponse toBudgetResponse(
             Budget b,
             Map<Long, Category> categoryMap,
-            Long userId,
-            LocalDate start,
-            LocalDate end) {
+            Map<Long, BigDecimal> spentByCategory) {
 
         Category category = categoryMap.get(b.getCategoryId());
         String categoryName = category != null ? category.getName() : "Unknown";
         String categoryColor = category != null ? category.getColor() : null;
 
-        BigDecimal spent = computeSpent(userId, b.getCategoryId(), start, end);
+        BigDecimal spent = spentByCategory.getOrDefault(b.getCategoryId(), BigDecimal.ZERO);
         BigDecimal remaining = b.getLimitAmount().subtract(spent);
 
         return new BudgetResponse(
