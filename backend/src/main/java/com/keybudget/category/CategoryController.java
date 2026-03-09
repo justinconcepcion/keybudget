@@ -2,6 +2,7 @@ package com.keybudget.category;
 
 import com.keybudget.category.dto.CategoryResponse;
 import com.keybudget.category.dto.CreateCategoryRequest;
+import com.keybudget.category.dto.UpdateCategoryRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,5 +46,23 @@ public class CategoryController {
         Long userId = jwt.getClaim("userId");
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(categoryService.createCategory(userId, req));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<CategoryResponse> updateCategory(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateCategoryRequest req) {
+        Long userId = jwt.getClaim("userId");
+        return ResponseEntity.ok(categoryService.updateCategory(userId, id, req));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCategory(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long id) {
+        Long userId = jwt.getClaim("userId");
+        categoryService.deleteCategory(userId, id);
+        return ResponseEntity.noContent().build();
     }
 }

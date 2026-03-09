@@ -3,6 +3,8 @@ package com.keybudget.category;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.keybudget.category.dto.CategoryResponse;
 import com.keybudget.category.dto.CreateCategoryRequest;
+import com.keybudget.category.dto.UpdateCategoryRequest;
+import com.keybudget.shared.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -14,10 +16,9 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(CategoryController.class)
@@ -123,6 +124,113 @@ class CategoryControllerTest {
                         .with(jwt().jwt(j -> j.claim("userId", 1L)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error").value("INTERNAL_ERROR"));
+    }
+
+    // -------------------------------------------------------------------------
+    // PUT /api/v1/categories/{id}
+    // -------------------------------------------------------------------------
+
+    @Test
+    void updateCategory_givenValidRequest_200() throws Exception {
+        UpdateCategoryRequest req = new UpdateCategoryRequest("Updated", "star", "#000", CategoryType.EXPENSE);
+        CategoryResponse response = new CategoryResponse(10L, "Updated", "star", "#000", CategoryType.EXPENSE, false);
+
+        when(categoryService.updateCategory(eq(1L), eq(10L), any(UpdateCategoryRequest.class)))
+                .thenReturn(response);
+
+        mockMvc.perform(put("/api/v1/categories/10")
+                        .with(jwt().jwt(j -> j.claim("userId", 1L)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Updated"));
+    }
+
+    @Test
+    void updateCategory_givenNotFound_404() throws Exception {
+        UpdateCategoryRequest req = new UpdateCategoryRequest("Name", null, null, CategoryType.EXPENSE);
+
+        when(categoryService.updateCategory(eq(1L), eq(999L), any(UpdateCategoryRequest.class)))
+                .thenThrow(new ResourceNotFoundException("Category not found: 999"));
+
+        mockMvc.perform(put("/api/v1/categories/999")
+                        .with(jwt().jwt(j -> j.claim("userId", 1L)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("NOT_FOUND"));
+    }
+
+    @Test
+    void updateCategory_givenBlankName_400() throws Exception {
+        UpdateCategoryRequest req = new UpdateCategoryRequest("", null, null, CategoryType.EXPENSE);
+
+        mockMvc.perform(put("/api/v1/categories/10")
+                        .with(jwt().jwt(j -> j.claim("userId", 1L)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateCategory_givenServiceThrows_500() throws Exception {
+        UpdateCategoryRequest req = new UpdateCategoryRequest("Name", null, null, CategoryType.EXPENSE);
+
+        when(categoryService.updateCategory(eq(1L), eq(10L), any(UpdateCategoryRequest.class)))
+                .thenThrow(new RuntimeException("DB error"));
+
+        mockMvc.perform(put("/api/v1/categories/10")
+                        .with(jwt().jwt(j -> j.claim("userId", 1L)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error").value("INTERNAL_ERROR"));
+    }
+
+    // -------------------------------------------------------------------------
+    // DELETE /api/v1/categories/{id}
+    // -------------------------------------------------------------------------
+
+    @Test
+    void deleteCategory_givenValidId_204() throws Exception {
+        doNothing().when(categoryService).deleteCategory(1L, 10L);
+
+        mockMvc.perform(delete("/api/v1/categories/10")
+                        .with(jwt().jwt(j -> j.claim("userId", 1L))))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void deleteCategory_givenNotFound_404() throws Exception {
+        doThrow(new ResourceNotFoundException("Category not found: 999"))
+                .when(categoryService).deleteCategory(1L, 999L);
+
+        mockMvc.perform(delete("/api/v1/categories/999")
+                        .with(jwt().jwt(j -> j.claim("userId", 1L))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("NOT_FOUND"));
+    }
+
+    @Test
+    void deleteCategory_givenTransactionsExist_400() throws Exception {
+        doThrow(new IllegalArgumentException("Cannot delete category with existing transactions"))
+                .when(categoryService).deleteCategory(1L, 10L);
+
+        mockMvc.perform(delete("/api/v1/categories/10")
+                        .with(jwt().jwt(j -> j.claim("userId", 1L))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("BAD_REQUEST"));
+    }
+
+    @Test
+    void deleteCategory_givenServiceThrows_500() throws Exception {
+        doThrow(new RuntimeException("DB error"))
+                .when(categoryService).deleteCategory(1L, 10L);
+
+        mockMvc.perform(delete("/api/v1/categories/10")
+                        .with(jwt().jwt(j -> j.claim("userId", 1L))))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.error").value("INTERNAL_ERROR"));
     }

@@ -3,6 +3,7 @@ package com.keybudget.category;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 /** Data access for {@link Category} entities. */
 public interface CategoryRepository extends JpaRepository<Category, Long> {
@@ -18,4 +19,6 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     /** Checks whether any system-default category already exists (used to guard seeding). */
     boolean existsByUserIdIsNull();
+
+    Optional<Category> findByIdAndUserId(Long id, Long userId);
 }

@@ -2,6 +2,9 @@ package com.keybudget.category;
 
 import com.keybudget.category.dto.CategoryResponse;
 import com.keybudget.category.dto.CreateCategoryRequest;
+import com.keybudget.category.dto.UpdateCategoryRequest;
+import com.keybudget.shared.ResourceNotFoundException;
+import com.keybudget.transaction.TransactionRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,9 +18,12 @@ import java.util.List;
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final TransactionRepository transactionRepository;
 
-    public CategoryServiceImpl(CategoryRepository categoryRepository) {
+    public CategoryServiceImpl(CategoryRepository categoryRepository,
+                               TransactionRepository transactionRepository) {
         this.categoryRepository = categoryRepository;
+        this.transactionRepository = transactionRepository;
     }
 
     /**
@@ -73,6 +79,32 @@ public class CategoryServiceImpl implements CategoryService {
         category.setColor(req.color());
         category.setType(req.type());
         return toResponse(categoryRepository.save(category));
+    }
+
+    @Override
+    @Transactional
+    public CategoryResponse updateCategory(Long userId, Long categoryId, UpdateCategoryRequest req) {
+        Category category = categoryRepository.findByIdAndUserId(categoryId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found: " + categoryId));
+
+        category.setName(req.name());
+        category.setIcon(req.icon());
+        category.setColor(req.color());
+        category.setType(req.type());
+        return toResponse(categoryRepository.save(category));
+    }
+
+    @Override
+    @Transactional
+    public void deleteCategory(Long userId, Long categoryId) {
+        Category category = categoryRepository.findByIdAndUserId(categoryId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found: " + categoryId));
+
+        if (transactionRepository.existsByUserIdAndCategoryId(userId, categoryId)) {
+            throw new IllegalArgumentException("Cannot delete category with existing transactions");
+        }
+
+        categoryRepository.delete(category);
     }
 
     // -------------------------------------------------------------------------

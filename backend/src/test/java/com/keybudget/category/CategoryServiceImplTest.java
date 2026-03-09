@@ -2,6 +2,9 @@ package com.keybudget.category;
 
 import com.keybudget.category.dto.CategoryResponse;
 import com.keybudget.category.dto.CreateCategoryRequest;
+import com.keybudget.category.dto.UpdateCategoryRequest;
+import com.keybudget.shared.ResourceNotFoundException;
+import com.keybudget.transaction.TransactionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,8 +13,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -21,11 +26,14 @@ class CategoryServiceImplTest {
     @Mock
     private CategoryRepository categoryRepository;
 
+    @Mock
+    private TransactionRepository transactionRepository;
+
     private CategoryServiceImpl categoryService;
 
     @BeforeEach
     void setUp() {
-        categoryService = new CategoryServiceImpl(categoryRepository);
+        categoryService = new CategoryServiceImpl(categoryRepository, transactionRepository);
     }
 
     // -------------------------------------------------------------------------
@@ -131,6 +139,67 @@ class CategoryServiceImplTest {
         ArgumentCaptor<Category> captor = ArgumentCaptor.forClass(Category.class);
         verify(categoryRepository).save(captor.capture());
         assertThat(captor.getValue().getUserId()).isEqualTo(7L);
+    }
+
+    // -------------------------------------------------------------------------
+    // updateCategory
+    // -------------------------------------------------------------------------
+
+    @Test
+    void updateCategory_givenValidRequest_updatesAndReturnsResponse() {
+        Category existing = buildCategory(10L, "Old Name", 5L, CategoryType.EXPENSE);
+        when(categoryRepository.findByIdAndUserId(10L, 5L)).thenReturn(Optional.of(existing));
+        when(categoryRepository.save(any(Category.class))).thenReturn(existing);
+
+        UpdateCategoryRequest req = new UpdateCategoryRequest("New Name", "star", "#000000", CategoryType.INCOME);
+        CategoryResponse result = categoryService.updateCategory(5L, 10L, req);
+
+        assertThat(result.name()).isEqualTo("New Name");
+        assertThat(existing.getIcon()).isEqualTo("star");
+    }
+
+    @Test
+    void updateCategory_givenNotFound_throwsResourceNotFoundException() {
+        when(categoryRepository.findByIdAndUserId(999L, 1L)).thenReturn(Optional.empty());
+
+        UpdateCategoryRequest req = new UpdateCategoryRequest("Name", null, null, CategoryType.EXPENSE);
+
+        assertThatThrownBy(() -> categoryService.updateCategory(1L, 999L, req))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    // -------------------------------------------------------------------------
+    // deleteCategory
+    // -------------------------------------------------------------------------
+
+    @Test
+    void deleteCategory_givenValidId_deletesCategory() {
+        Category existing = buildCategory(10L, "Custom", 5L, CategoryType.EXPENSE);
+        when(categoryRepository.findByIdAndUserId(10L, 5L)).thenReturn(Optional.of(existing));
+        when(transactionRepository.existsByUserIdAndCategoryId(5L, 10L)).thenReturn(false);
+
+        categoryService.deleteCategory(5L, 10L);
+
+        verify(categoryRepository).delete(existing);
+    }
+
+    @Test
+    void deleteCategory_givenNotFound_throwsResourceNotFoundException() {
+        when(categoryRepository.findByIdAndUserId(999L, 1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> categoryService.deleteCategory(1L, 999L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void deleteCategory_givenTransactionsExist_throwsIllegalArgument() {
+        Category existing = buildCategory(10L, "Custom", 5L, CategoryType.EXPENSE);
+        when(categoryRepository.findByIdAndUserId(10L, 5L)).thenReturn(Optional.of(existing));
+        when(transactionRepository.existsByUserIdAndCategoryId(5L, 10L)).thenReturn(true);
+
+        assertThatThrownBy(() -> categoryService.deleteCategory(5L, 10L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("existing transactions");
     }
 
     // -------------------------------------------------------------------------

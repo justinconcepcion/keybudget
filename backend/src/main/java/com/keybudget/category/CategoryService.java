@@ -2,6 +2,7 @@ package com.keybudget.category;
 
 import com.keybudget.category.dto.CategoryResponse;
 import com.keybudget.category.dto.CreateCategoryRequest;
+import com.keybudget.category.dto.UpdateCategoryRequest;
 
 import java.util.List;
 
@@ -25,4 +26,8 @@ public interface CategoryService {
      * @return the persisted category as a response DTO
      */
     CategoryResponse createCategory(Long userId, CreateCategoryRequest req);
+
+    CategoryResponse updateCategory(Long userId, Long categoryId, UpdateCategoryRequest req);
+
+    void deleteCategory(Long userId, Long categoryId);
 }
