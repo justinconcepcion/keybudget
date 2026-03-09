@@ -428,6 +428,7 @@
   import { useBudgetsStore } from '@/stores/budgets'
   import { useCategoriesStore } from '@/stores/categories'
   import type { BudgetResponse } from '@/types'
+  import { formatMoney, budgetPct, budgetBarColor } from '@/utils/formatting'
 
   const budgetsStore = useBudgetsStore()
   const categoriesStore = useCategoriesStore()
@@ -454,23 +455,6 @@
     }
   }
 
-  // ── Formatting ────────────────────────────────────────────────────────────
-
-  function formatMoney(value: number): string {
-    return `$${value.toFixed(2)}`
-  }
-
-  function budgetPct(budget: BudgetResponse): number {
-    if (budget.limitAmount === 0) return 0
-    return Math.min(Math.round((budget.spentAmount / budget.limitAmount) * 100), 100)
-  }
-
-  function budgetBarColor(budget: BudgetResponse): string {
-    const pct = budgetPct(budget)
-    if (pct > 90) return 'bg-red-500'
-    if (pct > 70) return 'bg-yellow-400'
-    return 'bg-primary-500'
-  }
 
   // ── Add modal ─────────────────────────────────────────────────────────────
 

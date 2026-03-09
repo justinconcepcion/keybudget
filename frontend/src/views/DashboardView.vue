@@ -153,7 +153,7 @@
               {{ tx.description || tx.categoryName }}
             </span>
             <span class="text-xs text-gray-400 mt-0.5">
-              {{ tx.categoryName }} · {{ formatDate(tx.date) }}
+              {{ tx.categoryName }} · {{ formatDate(tx.date, false) }}
             </span>
           </div>
           <span
@@ -175,7 +175,7 @@
   import { useTransactionsStore } from '@/stores/transactions'
   import { useBudgetsStore } from '@/stores/budgets'
   import SummaryCard from '@/components/dashboard/SummaryCard.vue'
-  import type { BudgetResponse } from '@/types'
+  import { formatMoney, formatDate, budgetPct, budgetBarColor } from '@/utils/formatting'
 
   const authStore = useAuthStore()
   const transactionsStore = useTransactionsStore()
@@ -203,17 +203,6 @@
   const currentMonth = computed(() =>
     new Date().toLocaleString('default', { month: 'long', year: 'numeric' }),
   )
-
-  function formatMoney(value: number): string {
-    return `$${value.toFixed(2)}`
-  }
-
-  function formatDate(dateStr: string): string {
-    return new Date(dateStr + 'T00:00:00').toLocaleDateString('default', {
-      month: 'short',
-      day: 'numeric',
-    })
-  }
 
   const summary = computed(() => transactionsStore.monthlySummary)
 
@@ -261,18 +250,6 @@
 
   function categoryBarPct(total: number): number {
     return Math.min(Math.round((total / maxCategoryTotal.value) * 100), 100)
-  }
-
-  function budgetPct(budget: BudgetResponse): number {
-    if (budget.limitAmount === 0) return 0
-    return Math.min(Math.round((budget.spentAmount / budget.limitAmount) * 100), 100)
-  }
-
-  function budgetBarColor(budget: BudgetResponse): string {
-    const pct = budgetPct(budget)
-    if (pct > 90) return 'bg-red-500'
-    if (pct > 70) return 'bg-yellow-400'
-    return 'bg-primary-500'
   }
 
   const recentTransactions = computed(() => transactionsStore.transactions.slice(0, 5))

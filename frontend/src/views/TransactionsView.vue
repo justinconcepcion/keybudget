@@ -350,6 +350,7 @@
   import { ref, computed, reactive, watch, onMounted } from 'vue'
   import { useTransactionsStore } from '@/stores/transactions'
   import { useCategoriesStore } from '@/stores/categories'
+  import { formatMoney, formatDate } from '@/utils/formatting'
 
   const transactionsStore = useTransactionsStore()
   const categoriesStore = useCategoriesStore()
@@ -417,20 +418,6 @@
 
   function changePage(page: number) {
     loadTransactions(page)
-  }
-
-  // ── Formatting ────────────────────────────────────────────────────────────
-
-  function formatMoney(value: number): string {
-    return `$${value.toFixed(2)}`
-  }
-
-  function formatDate(dateStr: string): string {
-    return new Date(dateStr + 'T00:00:00').toLocaleDateString('default', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
   }
 
   // ── Add Transaction form ──────────────────────────────────────────────────
