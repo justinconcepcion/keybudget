@@ -61,6 +61,11 @@ public class JwtServiceImpl implements JwtService {
         }
     }
 
+    @Override
+    public String extractJti(String token) {
+        return parseClaims(token).getId();
+    }
+
     private String buildToken(User user, long expirySeconds, String tokenType) {
         Instant now = Instant.now();
         return Jwts.builder()
@@ -79,6 +84,7 @@ public class JwtServiceImpl implements JwtService {
     private Claims parseClaims(String token) {
         return Jwts.parser()
                 .verifyWith(publicKey)
+                .requireIssuer("keybudget-api")
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();

@@ -4,12 +4,20 @@ import com.keybudget.auth.OAuth2SuccessHandler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtClaimValidator;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -49,9 +57,17 @@ public class SecurityConfig {
                     "/oauth2/**",
                     "/login/oauth2/**",
                     "/api/v1/auth/refresh",
+                    "/api/v1/auth/logout",
                     "/actuator/health"
                 ).permitAll()
                 .anyRequest().authenticated()
+            )
+            .exceptionHandling(ex -> ex
+                // All /api/** paths return 401 instead of redirecting to OAuth2 login
+                .defaultAuthenticationEntryPointFor(
+                    new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                    new AntPathRequestMatcher("/api/**")
+                )
             )
             .oauth2Login(oauth2 -> oauth2
                 .successHandler(oAuth2SuccessHandler)
@@ -69,7 +85,13 @@ public class SecurityConfig {
             KeyFactory kf = KeyFactory.getInstance("RSA");
             PublicKey publicKey = kf.generatePublic(
                     new X509EncodedKeySpec(Base64.getDecoder().decode(publicKeyBase64)));
-            return NimbusJwtDecoder.withPublicKey((RSAPublicKey) publicKey).build();
+            NimbusJwtDecoder decoder = NimbusJwtDecoder.withPublicKey((RSAPublicKey) publicKey).build();
+            OAuth2TokenValidator<Jwt> validators = new DelegatingOAuth2TokenValidator<>(
+                    new JwtTimestampValidator(),
+                    new JwtClaimValidator<String>("iss", "keybudget-api"::equals)
+            );
+            decoder.setJwtValidator(validators);
+            return decoder;
         } catch (Exception e) {
             throw new IllegalStateException("Failed to configure JWT decoder", e);
         }

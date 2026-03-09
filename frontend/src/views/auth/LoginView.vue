@@ -3,26 +3,46 @@
     <div class="w-full max-w-sm">
       <!-- Logo -->
       <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary-600 mb-4">
-          <svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <div
+          class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary-600 mb-4"
+        >
+          <svg
+            class="w-8 h-8 text-white"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
         </div>
-        <h1 class="text-2xl font-bold text-gray-900">KeyBudget</h1>
-        <p class="mt-1 text-sm text-gray-500">Take control of your finances</p>
+        <h1 class="text-2xl font-bold text-gray-900">
+          KeyBudget
+        </h1>
+        <p class="mt-1 text-sm text-gray-500">
+          Take control of your finances
+        </p>
       </div>
 
       <!-- Card -->
       <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-        <h2 class="text-lg font-semibold text-gray-900 mb-6">Sign in to your account</h2>
+        <h2 class="text-lg font-semibold text-gray-900 mb-6">
+          Sign in to your account
+        </h2>
 
         <a
           :href="googleOAuthUrl"
           class="flex items-center justify-center gap-3 w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
         >
           <!-- Google G logo -->
-          <svg class="w-5 h-5" viewBox="0 0 24 24">
+          <svg
+            class="w-5 h-5"
+            viewBox="0 0 24 24"
+          >
             <path
               fill="#4285F4"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -45,9 +65,15 @@
 
         <p class="mt-6 text-xs text-center text-gray-400">
           By signing in, you agree to our
-          <a href="#" class="underline hover:text-gray-600">Terms</a>
+          <a
+            href="#"
+            class="underline hover:text-gray-600"
+          >Terms</a>
           and
-          <a href="#" class="underline hover:text-gray-600">Privacy Policy</a>.
+          <a
+            href="#"
+            class="underline hover:text-gray-600"
+          >Privacy Policy</a>.
         </p>
       </div>
     </div>
