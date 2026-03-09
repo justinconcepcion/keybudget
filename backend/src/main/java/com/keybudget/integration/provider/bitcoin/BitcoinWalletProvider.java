@@ -317,15 +317,19 @@ public class BitcoinWalletProvider implements IntegrationProvider {
                             .build())
                     .retrieve()
                     .onStatus(HttpStatusCode::is4xxClientError, httpResponse -> {
+                        int status = httpResponse.statusCode().value();
                         if (httpResponse.statusCode() == HttpStatus.TOO_MANY_REQUESTS) {
-                            return Mono.error(new RuntimeException("CoinGecko rate limit exceeded"));
+                            return Mono.error(new ProviderRateLimitException(
+                                    ProviderType.BITCOIN_WALLET, "CoinGecko rate limit exceeded"));
                         }
-                        return Mono.error(new RuntimeException(
-                                "CoinGecko returned HTTP " + httpResponse.statusCode().value()));
+                        return Mono.error(new ProviderException(
+                                ProviderType.BITCOIN_WALLET, "CoinGecko client error: " + status));
                     })
-                    .onStatus(HttpStatusCode::is5xxServerError, httpResponse ->
-                            Mono.error(new RuntimeException(
-                                    "CoinGecko server error: HTTP " + httpResponse.statusCode().value())))
+                    .onStatus(HttpStatusCode::is5xxServerError, httpResponse -> {
+                        int status = httpResponse.statusCode().value();
+                        return Mono.error(new ProviderException(
+                                ProviderType.BITCOIN_WALLET, "CoinGecko server error: " + status));
+                    })
                     .bodyToMono(CoinGeckoPriceResponse.class)
                     .timeout(API_TIMEOUT)
                     .block();

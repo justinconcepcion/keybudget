@@ -231,6 +231,7 @@ public class IntegrationOrchestrationServiceImpl implements IntegrationOrchestra
         } catch (ProviderException ex) {
             log.error("Sync failed for provider {} userId={}: {}",
                     credential.getProviderType(), userId, ex.getMessage(), ex);
+            log.error("Full sync error for provider {} userId {}: {}", credential.getProviderType(), userId, ex.getMessage());
             credential.setStatus(SyncStatus.ERROR);
             credential.setErrorMessage(truncate(ex.getMessage(), 500));
             credentialRepository.save(credential);

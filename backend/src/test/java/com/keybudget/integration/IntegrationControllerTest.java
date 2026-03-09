@@ -73,32 +73,25 @@ class IntegrationControllerTest {
         }
 
         @Test
-        void connect_givenMissingProviderType_500() throws Exception {
-            // BUG: GlobalExceptionHandler handles ConstraintViolationException but not
-            // MethodArgumentNotValidException (thrown by @Valid on @RequestBody).
-            // Missing required fields in the request body therefore reach the generic
-            // Exception handler and return 500 instead of 400.
-            // Tracked for fix: add @ExceptionHandler(MethodArgumentNotValidException.class).
+        void connect_givenMissingProviderType_400() throws Exception {
             mockMvc.perform(post("/api/v1/integrations/connect")
                             .with(jwt().jwt(j -> j.claim("userId", USER_ID)))
                             .with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"credentials\":{\"address\":\"bc1q...\"}}"))
-                    .andExpect(status().isInternalServerError())
-                    .andExpect(jsonPath("$.error").value("INTERNAL_ERROR"));
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
         }
 
         @Test
-        void connect_givenMissingCredentials_500() throws Exception {
-            // BUG: see connect_givenMissingProviderType_500 for explanation.
-            // Missing credentials field surfaces as 500 rather than the intended 400.
+        void connect_givenMissingCredentials_400() throws Exception {
             mockMvc.perform(post("/api/v1/integrations/connect")
                             .with(jwt().jwt(j -> j.claim("userId", USER_ID)))
                             .with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"providerType\":\"BITCOIN_WALLET\"}"))
-                    .andExpect(status().isInternalServerError())
-                    .andExpect(jsonPath("$.error").value("INTERNAL_ERROR"));
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
         }
 
         @Test
