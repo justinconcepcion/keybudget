@@ -2,9 +2,11 @@ package com.keybudget.transaction;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.keybudget.transaction.dto.CategoryTotal;
+import com.keybudget.shared.ResourceNotFoundException;
 import com.keybudget.transaction.dto.CreateTransactionRequest;
 import com.keybudget.transaction.dto.MonthlySummaryResponse;
 import com.keybudget.transaction.dto.TransactionResponse;
+import com.keybudget.transaction.dto.UpdateTransactionRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -22,8 +24,9 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(TransactionController.class)
@@ -130,6 +133,119 @@ class TransactionControllerTest {
                         .with(jwt().jwt(j -> j.claim("userId", 1L)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error").value("INTERNAL_ERROR"));
+    }
+
+    // -------------------------------------------------------------------------
+    // PUT /api/v1/transactions/{id}
+    // -------------------------------------------------------------------------
+
+    @Test
+    void updateTransaction_givenValidRequest_200() throws Exception {
+        UpdateTransactionRequest req = new UpdateTransactionRequest(
+                new BigDecimal("75.00"), "Updated dinner", LocalDate.of(2026, 3, 15),
+                TransactionType.EXPENSE, 5L);
+        TransactionResponse response = new TransactionResponse(
+                20L, new BigDecimal("75.00"), "Updated dinner",
+                LocalDate.of(2026, 3, 15), TransactionType.EXPENSE, 5L, "Food");
+
+        when(transactionService.updateTransaction(eq(1L), eq(20L), any(UpdateTransactionRequest.class)))
+                .thenReturn(response);
+
+        mockMvc.perform(put("/api/v1/transactions/20")
+                        .with(jwt().jwt(j -> j.claim("userId", 1L)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(20))
+                .andExpect(jsonPath("$.description").value("Updated dinner"));
+    }
+
+    @Test
+    void updateTransaction_givenNotFound_404() throws Exception {
+        UpdateTransactionRequest req = new UpdateTransactionRequest(
+                new BigDecimal("75.00"), "Test", LocalDate.of(2026, 3, 15),
+                TransactionType.EXPENSE, 5L);
+
+        when(transactionService.updateTransaction(eq(1L), eq(999L), any(UpdateTransactionRequest.class)))
+                .thenThrow(new ResourceNotFoundException("Transaction not found: 999"));
+
+        mockMvc.perform(put("/api/v1/transactions/999")
+                        .with(jwt().jwt(j -> j.claim("userId", 1L)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("NOT_FOUND"));
+    }
+
+    @Test
+    void updateTransaction_givenNullAmount_400() throws Exception {
+        String body = """
+                {"amount":null,"description":"Test","date":"2026-03-15","type":"EXPENSE","categoryId":5}
+                """;
+
+        mockMvc.perform(put("/api/v1/transactions/20")
+                        .with(jwt().jwt(j -> j.claim("userId", 1L)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateTransaction_givenServiceThrows_500() throws Exception {
+        UpdateTransactionRequest req = new UpdateTransactionRequest(
+                new BigDecimal("75.00"), null, LocalDate.of(2026, 3, 15),
+                TransactionType.EXPENSE, 5L);
+
+        when(transactionService.updateTransaction(eq(1L), eq(20L), any(UpdateTransactionRequest.class)))
+                .thenThrow(new RuntimeException("DB error"));
+
+        mockMvc.perform(put("/api/v1/transactions/20")
+                        .with(jwt().jwt(j -> j.claim("userId", 1L)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error").value("INTERNAL_ERROR"));
+    }
+
+    // -------------------------------------------------------------------------
+    // DELETE /api/v1/transactions/{id}
+    // -------------------------------------------------------------------------
+
+    @Test
+    void deleteTransaction_givenValidId_204() throws Exception {
+        doNothing().when(transactionService).deleteTransaction(1L, 20L);
+
+        mockMvc.perform(delete("/api/v1/transactions/20")
+                        .with(jwt().jwt(j -> j.claim("userId", 1L))))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void deleteTransaction_givenNotFound_404() throws Exception {
+        doThrow(new ResourceNotFoundException("Transaction not found: 999"))
+                .when(transactionService).deleteTransaction(1L, 999L);
+
+        mockMvc.perform(delete("/api/v1/transactions/999")
+                        .with(jwt().jwt(j -> j.claim("userId", 1L))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("NOT_FOUND"));
+    }
+
+    @Test
+    void deleteTransaction_givenNoJwt_403() throws Exception {
+        mockMvc.perform(delete("/api/v1/transactions/20"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void deleteTransaction_givenServiceThrows_500() throws Exception {
+        doThrow(new RuntimeException("DB error"))
+                .when(transactionService).deleteTransaction(1L, 20L);
+
+        mockMvc.perform(delete("/api/v1/transactions/20")
+                        .with(jwt().jwt(j -> j.claim("userId", 1L))))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.error").value("INTERNAL_ERROR"));
     }

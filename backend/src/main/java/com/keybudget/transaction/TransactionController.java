@@ -3,6 +3,7 @@ package com.keybudget.transaction;
 import com.keybudget.transaction.dto.CreateTransactionRequest;
 import com.keybudget.transaction.dto.MonthlySummaryResponse;
 import com.keybudget.transaction.dto.TransactionResponse;
+import com.keybudget.transaction.dto.UpdateTransactionRequest;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -77,6 +78,24 @@ public class TransactionController {
         Long userId = jwt.getClaim("userId");
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(transactionService.createTransaction(userId, req));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<TransactionResponse> updateTransaction(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateTransactionRequest req) {
+        Long userId = jwt.getClaim("userId");
+        return ResponseEntity.ok(transactionService.updateTransaction(userId, id, req));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTransaction(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long id) {
+        Long userId = jwt.getClaim("userId");
+        transactionService.deleteTransaction(userId, id);
+        return ResponseEntity.noContent().build();
     }
 
     /**

@@ -3,9 +3,11 @@ package com.keybudget.transaction;
 import com.keybudget.category.Category;
 import com.keybudget.category.CategoryRepository;
 import com.keybudget.category.CategoryType;
+import com.keybudget.shared.ResourceNotFoundException;
 import com.keybudget.transaction.dto.CreateTransactionRequest;
 import com.keybudget.transaction.dto.MonthlySummaryResponse;
 import com.keybudget.transaction.dto.TransactionResponse;
+import com.keybudget.transaction.dto.UpdateTransactionRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,11 +22,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -213,6 +217,90 @@ class TransactionServiceImplTest {
         assertThat(result.totalExpenses()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(result.netSavings()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(result.byCategory()).isEmpty();
+    }
+
+    // -------------------------------------------------------------------------
+    // updateTransaction
+    // -------------------------------------------------------------------------
+
+    @Test
+    void updateTransaction_givenValidRequest_updatesAndReturnsResponse() {
+        Long userId = 1L;
+        Long txId = 20L;
+        UpdateTransactionRequest req = new UpdateTransactionRequest(
+                new BigDecimal("80.00"), "Updated", LocalDate.of(2026, 3, 16),
+                TransactionType.EXPENSE, 5L);
+
+        Category cat = buildCategory(5L, "Food");
+        Transaction existing = buildTransaction(txId, userId, 5L, new BigDecimal("50.00"), TransactionType.EXPENSE);
+
+        when(transactionRepository.findByIdAndUserId(txId, userId)).thenReturn(Optional.of(existing));
+        when(categoryRepository.findByUserIdOrUserIdIsNull(userId)).thenReturn(List.of(cat));
+        when(transactionRepository.save(any(Transaction.class))).thenReturn(existing);
+
+        TransactionResponse result = transactionService.updateTransaction(userId, txId, req);
+
+        assertThat(result.id()).isEqualTo(txId);
+        assertThat(existing.getAmount()).isEqualByComparingTo("80.00");
+        assertThat(existing.getDescription()).isEqualTo("Updated");
+    }
+
+    @Test
+    void updateTransaction_givenNotFound_throwsResourceNotFoundException() {
+        Long userId = 1L;
+        UpdateTransactionRequest req = new UpdateTransactionRequest(
+                new BigDecimal("50.00"), null, LocalDate.now(), TransactionType.EXPENSE, 5L);
+
+        when(transactionRepository.findByIdAndUserId(999L, userId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> transactionService.updateTransaction(userId, 999L, req))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Transaction not found");
+    }
+
+    @Test
+    void updateTransaction_givenInaccessibleCategory_throwsIllegalArgument() {
+        Long userId = 1L;
+        Long txId = 20L;
+        UpdateTransactionRequest req = new UpdateTransactionRequest(
+                new BigDecimal("50.00"), null, LocalDate.now(), TransactionType.EXPENSE, 999L);
+
+        Transaction existing = buildTransaction(txId, userId, 5L, new BigDecimal("50.00"), TransactionType.EXPENSE);
+
+        when(transactionRepository.findByIdAndUserId(txId, userId)).thenReturn(Optional.of(existing));
+        when(categoryRepository.findByUserIdOrUserIdIsNull(userId)).thenReturn(List.of());
+
+        assertThatThrownBy(() -> transactionService.updateTransaction(userId, txId, req))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Category not found or not accessible");
+    }
+
+    // -------------------------------------------------------------------------
+    // deleteTransaction
+    // -------------------------------------------------------------------------
+
+    @Test
+    void deleteTransaction_givenValidId_deletesTransaction() {
+        Long userId = 1L;
+        Long txId = 20L;
+        Transaction existing = buildTransaction(txId, userId, 5L, new BigDecimal("50.00"), TransactionType.EXPENSE);
+
+        when(transactionRepository.findByIdAndUserId(txId, userId)).thenReturn(Optional.of(existing));
+
+        transactionService.deleteTransaction(userId, txId);
+
+        verify(transactionRepository).delete(existing);
+    }
+
+    @Test
+    void deleteTransaction_givenNotFound_throwsResourceNotFoundException() {
+        Long userId = 1L;
+
+        when(transactionRepository.findByIdAndUserId(999L, userId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> transactionService.deleteTransaction(userId, 999L))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Transaction not found");
     }
 
     // -------------------------------------------------------------------------

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 /** Data access for {@link Transaction} entities. */
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
@@ -98,4 +99,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
      * @return list of matching transactions
      */
     List<Transaction> findByUserIdAndDateBetween(Long userId, LocalDate start, LocalDate end);
+
+    Optional<Transaction> findByIdAndUserId(Long id, Long userId);
 }

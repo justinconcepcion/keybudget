@@ -2,10 +2,12 @@ package com.keybudget.transaction;
 
 import com.keybudget.category.Category;
 import com.keybudget.category.CategoryRepository;
+import com.keybudget.shared.ResourceNotFoundException;
 import com.keybudget.transaction.dto.CategoryTotal;
 import com.keybudget.transaction.dto.CreateTransactionRequest;
 import com.keybudget.transaction.dto.MonthlySummaryResponse;
 import com.keybudget.transaction.dto.TransactionResponse;
+import com.keybudget.transaction.dto.UpdateTransactionRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -127,6 +129,37 @@ public class TransactionServiceImpl implements TransactionService {
                 .toList();
 
         return new MonthlySummaryResponse(totalIncome, totalExpenses, netSavings, byCategory);
+    }
+
+    @Override
+    @Transactional
+    public TransactionResponse updateTransaction(Long userId, Long transactionId, UpdateTransactionRequest req) {
+        Transaction tx = transactionRepository.findByIdAndUserId(transactionId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found: " + transactionId));
+
+        categoryRepository.findByUserIdOrUserIdIsNull(userId).stream()
+                .filter(c -> c.getId().equals(req.categoryId()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Category not found or not accessible: " + req.categoryId()));
+
+        tx.setAmount(req.amount());
+        tx.setDescription(req.description());
+        tx.setDate(req.date());
+        tx.setType(req.type());
+        tx.setCategoryId(req.categoryId());
+
+        Transaction saved = transactionRepository.save(tx);
+        Map<Long, String> categoryNames = buildCategoryNameMap(userId);
+        return toResponse(saved, categoryNames);
+    }
+
+    @Override
+    @Transactional
+    public void deleteTransaction(Long userId, Long transactionId) {
+        Transaction tx = transactionRepository.findByIdAndUserId(transactionId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found: " + transactionId));
+        transactionRepository.delete(tx);
     }
 
     // -------------------------------------------------------------------------

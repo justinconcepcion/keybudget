@@ -3,6 +3,7 @@ package com.keybudget.transaction;
 import com.keybudget.transaction.dto.CreateTransactionRequest;
 import com.keybudget.transaction.dto.MonthlySummaryResponse;
 import com.keybudget.transaction.dto.TransactionResponse;
+import com.keybudget.transaction.dto.UpdateTransactionRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -49,4 +50,8 @@ public interface TransactionService {
      * @return the summary DTO
      */
     MonthlySummaryResponse getMonthlySummary(Long userId, YearMonth month);
+
+    TransactionResponse updateTransaction(Long userId, Long transactionId, UpdateTransactionRequest req);
+
+    void deleteTransaction(Long userId, Long transactionId);
 }
