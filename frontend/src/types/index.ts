@@ -8,6 +8,7 @@ export interface UserProfile {
   email: string
   name: string
   pictureUrl: string | null
+  preferredCurrency: string
 }
 
 export interface ApiError {

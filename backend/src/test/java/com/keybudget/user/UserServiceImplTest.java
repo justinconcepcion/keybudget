@@ -90,6 +90,26 @@ class UserServiceImplTest {
                 .hasMessageContaining("User not found");
     }
 
+    @Test
+    void updateCurrency_givenValidCurrency_updatesAndReturnsProfile() {
+        User user = buildUser(1L, "j@example.com", "Justin");
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.save(user)).thenReturn(user);
+
+        UserProfileResponse result = userServiceImpl.updateCurrency(1L, "eur");
+
+        assertThat(result.preferredCurrency()).isEqualTo("EUR");
+    }
+
+    @Test
+    void updateCurrency_givenUnknownUserId_throwsIllegalArgument() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userServiceImpl.updateCurrency(99L, "EUR"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("User not found");
+    }
+
     private User buildUser(Long id, String email, String name) {
         User user = new User() {
             @Override

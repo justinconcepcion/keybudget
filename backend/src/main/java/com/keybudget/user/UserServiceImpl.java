@@ -45,6 +45,20 @@ public class UserServiceImpl implements UserService {
     public UserProfileResponse getProfile(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        return new UserProfileResponse(user.getId(), user.getEmail(), user.getName(), user.getPictureUrl());
+        return toProfileResponse(user);
+    }
+
+    @Override
+    @Transactional
+    public UserProfileResponse updateCurrency(Long userId, String currency) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        user.setPreferredCurrency(currency.toUpperCase());
+        userRepository.save(user);
+        return toProfileResponse(user);
+    }
+
+    private UserProfileResponse toProfileResponse(User user) {
+        return new UserProfileResponse(user.getId(), user.getEmail(), user.getName(), user.getPictureUrl(), user.getPreferredCurrency());
     }
 }
