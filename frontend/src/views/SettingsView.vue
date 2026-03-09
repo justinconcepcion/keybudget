@@ -137,9 +137,14 @@
   })
 
   async function handleCurrencyChange(e: Event) {
-    const currency = (e.target as HTMLSelectElement).value
-    const updated = await usersApi.updateCurrency(currency)
-    authStore.user = updated
+    const select = e.target as HTMLSelectElement
+    const previous = authStore.user?.preferredCurrency ?? 'USD'
+    try {
+      const updated = await usersApi.updateCurrency(select.value)
+      authStore.user = updated
+    } catch {
+      select.value = previous
+    }
   }
 
   async function handleLogout() {
