@@ -128,3 +128,72 @@ export interface CreateBudgetRequest {
 export interface UpdateBudgetRequest {
   limitAmount: number
 }
+
+// ── Integrations ────────────────────────────────────────────────────────────
+
+export interface AccountResponse {
+  id: number
+  credentialId: number
+  providerType: ProviderType
+  accountType: AccountType
+  displayName: string
+  currency: string
+  balance: number
+  balanceUsd: number
+  asOf: string
+  active: boolean
+}
+
+export type ProviderType = 'COINBASE' | 'BITCOIN_WALLET' | 'M1_FINANCE' | 'MARCUS'
+export type AccountType = 'CRYPTO_WALLET' | 'BROKERAGE' | 'SAVINGS' | 'CHECKING'
+export type SyncStatus = 'NEVER' | 'OK' | 'ERROR'
+
+export interface ProviderStatusResponse {
+  credentialId: number
+  providerType: ProviderType
+  status: SyncStatus
+  lastSyncedAt: string | null
+  errorMessage: string | null
+  accountCount: number
+}
+
+export interface ConnectAccountRequest {
+  providerType: ProviderType
+  credentials: Record<string, string>
+}
+
+export interface SyncResultResponse {
+  providerType: ProviderType
+  syncedAt: string
+  accountsUpdated: number
+  status: SyncStatus
+  errorMessage: string | null
+}
+
+export interface NetWorthResponse {
+  totalNetWorthUsd: number
+  byProvider: ProviderTotal[]
+  byAccountType: AccountTypeTotal[]
+  asOf: string
+}
+
+export interface ProviderTotal {
+  providerType: ProviderType
+  totalUsd: number
+  accountCount: number
+}
+
+export interface AccountTypeTotal {
+  accountType: AccountType
+  totalUsd: number
+  accountCount: number
+}
+
+export interface NetWorthHistoryResponse {
+  dataPoints: NetWorthDataPoint[]
+}
+
+export interface NetWorthDataPoint {
+  date: string
+  totalUsd: number
+}
