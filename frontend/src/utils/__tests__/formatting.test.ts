@@ -17,7 +17,7 @@ function makeBudget(limit: number, spent: number): BudgetResponse {
 
 describe('formatMoney', () => {
   it('formats positive values', () => {
-    expect(formatMoney(1234.5)).toBe('$1234.50')
+    expect(formatMoney(1234.5)).toBe('$1,234.50')
   })
 
   it('formats zero', () => {
@@ -25,11 +25,19 @@ describe('formatMoney', () => {
   })
 
   it('formats negative values', () => {
-    expect(formatMoney(-42.1)).toBe('$-42.10')
+    expect(formatMoney(-42.1)).toBe('-$42.10')
   })
 
   it('rounds to two decimals', () => {
     expect(formatMoney(9.999)).toBe('$10.00')
+  })
+
+  it('formats with different currency', () => {
+    expect(formatMoney(100, 'EUR')).toContain('100.00')
+  })
+
+  it('defaults to USD', () => {
+    expect(formatMoney(50)).toBe('$50.00')
   })
 })
 

@@ -1,7 +1,12 @@
 import type { BudgetResponse } from '@/types'
 
-export function formatMoney(value: number): string {
-  return `$${value.toFixed(2)}`
+export function formatMoney(value: number, currency = 'USD'): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value)
 }
 
 export function formatDate(dateStr: string, includeYear = true): string {

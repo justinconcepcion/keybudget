@@ -62,7 +62,15 @@
         </div>
         <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
           <span class="text-gray-700 dark:text-gray-300">Currency</span>
-          <span class="text-gray-400">USD — coming soon</span>
+          <select
+            :value="authStore.user?.preferredCurrency ?? 'USD'"
+            class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            @change="handleCurrencyChange"
+          >
+            <option v-for="c in currencies" :key="c.code" :value="c.code">
+              {{ c.code }} — {{ c.label }}
+            </option>
+          </select>
         </div>
         <div class="flex items-center justify-between py-2">
           <span class="text-gray-700 dark:text-gray-300">Notifications</span>
@@ -101,10 +109,22 @@
   import { useRouter } from 'vue-router'
   import { useAuthStore } from '@/stores/auth'
   import { useThemeStore } from '@/stores/theme'
+  import { usersApi } from '@/api/users'
 
   const router = useRouter()
   const authStore = useAuthStore()
   const themeStore = useThemeStore()
+
+  const currencies = [
+    { code: 'USD', label: 'US Dollar' },
+    { code: 'EUR', label: 'Euro' },
+    { code: 'GBP', label: 'British Pound' },
+    { code: 'CAD', label: 'Canadian Dollar' },
+    { code: 'AUD', label: 'Australian Dollar' },
+    { code: 'JPY', label: 'Japanese Yen' },
+    { code: 'CHF', label: 'Swiss Franc' },
+    { code: 'PHP', label: 'Philippine Peso' },
+  ]
 
   const initials = computed(() => {
     const name = authStore.user?.name ?? ''
@@ -115,6 +135,12 @@
       .toUpperCase()
       .slice(0, 2)
   })
+
+  async function handleCurrencyChange(e: Event) {
+    const currency = (e.target as HTMLSelectElement).value
+    const updated = await usersApi.updateCurrency(currency)
+    authStore.user = updated
+  }
 
   async function handleLogout() {
     await authStore.logout()
