@@ -1,5 +1,8 @@
 package com.keybudget.shared;
 
+import com.keybudget.integration.exception.ProviderAuthException;
+import com.keybudget.integration.exception.ProviderException;
+import com.keybudget.integration.exception.ProviderRateLimitException;
 import com.keybudget.shared.dto.ErrorResponse;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -22,11 +25,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getFieldErrors().stream()
-                .map(fe -> fe.getField() + " " + fe.getDefaultMessage())
-                .findFirst()
+                .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
+                .reduce((a, b) -> a + "; " + b)
                 .orElse(ex.getMessage());
         return ResponseEntity.badRequest()
                 .body(ErrorResponse.of("VALIDATION_ERROR", message));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+        log.warn("Bad request: {}", ex.getMessage());
+        return ResponseEntity.badRequest()
+                .body(ErrorResponse.of("BAD_REQUEST", "Invalid request parameters"));
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -35,10 +45,35 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of("NOT_FOUND", ex.getMessage()));
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
-        return ResponseEntity.badRequest()
-                .body(ErrorResponse.of("BAD_REQUEST", ex.getMessage()));
+    @ExceptionHandler(ProviderAuthException.class)
+    public ResponseEntity<ErrorResponse> handleProviderAuth(ProviderAuthException ex) {
+        log.warn("Provider auth failure [{}]: {}", ex.getProviderType(), ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.of("PROVIDER_AUTH_ERROR",
+                        "Provider authentication failed. Please reconnect."));
+    }
+
+    @ExceptionHandler(ProviderRateLimitException.class)
+    public ResponseEntity<ErrorResponse> handleProviderRateLimit(ProviderRateLimitException ex) {
+        log.warn("Provider rate limit [{}]: {}", ex.getProviderType(), ex.getMessage());
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(ErrorResponse.of("PROVIDER_RATE_LIMIT",
+                        "Rate limit exceeded. Please try again later."));
+    }
+
+    @ExceptionHandler(ProviderException.class)
+    public ResponseEntity<ErrorResponse> handleProvider(ProviderException ex) {
+        log.error("Provider error [{}]: {}", ex.getProviderType(), ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(ErrorResponse.of("PROVIDER_ERROR",
+                        "External provider error. Please try again later."));
+    }
+
+    @ExceptionHandler(UnsupportedOperationException.class)
+    public ResponseEntity<ErrorResponse> handleUnsupportedOperation(UnsupportedOperationException ex) {
+        log.warn("Unsupported operation: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
+                .body(ErrorResponse.of("NOT_IMPLEMENTED", ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)

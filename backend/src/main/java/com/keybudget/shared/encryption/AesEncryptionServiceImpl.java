@@ -23,6 +23,10 @@ public class AesEncryptionServiceImpl implements EncryptionService {
 
     public AesEncryptionServiceImpl(@Value("${app.encryption.key}") String base64Key) {
         byte[] keyBytes = Base64.getDecoder().decode(base64Key);
+        if (keyBytes.length != 32) {
+            throw new IllegalStateException(
+                    "AES encryption key must be exactly 32 bytes (256 bits), got " + keyBytes.length);
+        }
         this.secretKey = new SecretKeySpec(keyBytes, "AES");
     }
 
