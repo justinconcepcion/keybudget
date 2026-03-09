@@ -35,6 +35,20 @@ export interface CategoryResponse {
   isDefault: boolean
 }
 
+export interface CreateCategoryRequest {
+  name: string
+  icon?: string
+  color?: string
+  type: 'INCOME' | 'EXPENSE'
+}
+
+export interface UpdateCategoryRequest {
+  name: string
+  icon?: string
+  color?: string
+  type: 'INCOME' | 'EXPENSE'
+}
+
 // ── Transactions ─────────────────────────────────────────────────────────────
 
 export interface TransactionResponse {
