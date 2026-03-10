@@ -41,7 +41,7 @@
       v-else-if="store.error"
       class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center h-64 gap-3"
     >
-      <p class="text-sm text-red-600">
+      <p class="text-sm text-red-600 dark:text-red-400">
         {{ store.error }}
       </p>
       <button
@@ -315,7 +315,7 @@
 
           <p
             v-if="connectFormError"
-            class="text-sm text-red-600"
+            class="text-sm text-red-600 dark:text-red-400"
           >
             {{ connectFormError }}
           </p>

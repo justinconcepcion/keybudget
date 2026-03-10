@@ -45,9 +45,9 @@ export function accountTypeLabel(type: AccountType): string {
 }
 
 export function statusClass(status: SyncStatus | string): string {
-  if (status === 'OK') return 'bg-emerald-100 text-emerald-700'
-  if (status === 'ERROR') return 'bg-red-100 text-red-700'
-  return 'bg-gray-100 text-gray-600'
+  if (status === 'OK') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+  if (status === 'ERROR') return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+  return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
 }
 
 export function timeAgo(iso: string): string {
