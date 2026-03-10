@@ -57,7 +57,7 @@ public class SecurityConfig {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .headers(headers -> headers
                 .contentTypeOptions(ct -> {}) // X-Content-Type-Options: nosniff
                 .frameOptions(fo -> fo.deny()) // X-Frame-Options: DENY
