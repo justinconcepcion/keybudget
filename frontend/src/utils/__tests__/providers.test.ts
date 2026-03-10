@@ -55,15 +55,19 @@ describe('accountTypeLabel', () => {
 
 describe('statusClass', () => {
   it('returns green for OK', () => {
-    expect(statusClass('OK')).toBe('bg-emerald-100 text-emerald-700')
+    expect(statusClass('OK')).toBe(
+      'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+    )
   })
 
   it('returns red for ERROR', () => {
-    expect(statusClass('ERROR')).toBe('bg-red-100 text-red-700')
+    expect(statusClass('ERROR')).toBe(
+      'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+    )
   })
 
   it('returns gray for other statuses', () => {
-    expect(statusClass('NEVER')).toBe('bg-gray-100 text-gray-600')
+    expect(statusClass('NEVER')).toBe('bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300')
   })
 })
 
