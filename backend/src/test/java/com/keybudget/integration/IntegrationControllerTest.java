@@ -39,6 +39,9 @@ class IntegrationControllerTest {
     @MockBean
     private IntegrationOrchestrationService orchestrationService;
 
+    @MockBean
+    private com.keybudget.integration.provider.plaid.PlaidService plaidService;
+
     // -------------------------------------------------------------------------
     // POST /api/v1/integrations/connect
     // -------------------------------------------------------------------------
