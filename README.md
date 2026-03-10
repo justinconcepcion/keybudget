@@ -5,9 +5,13 @@ A personal finance dashboard for tracking budgets, transactions, and net worth a
 ## Features
 
 - **Google OAuth2 login** with RSA-signed JWT access and refresh tokens
-- **Budget management** — create and track monthly budgets by category
-- **Transaction tracking** — log, categorize, and review spending
+- **Budget management** — create and track monthly budgets by category (soft delete)
+- **Transaction tracking** — log, categorize, and review spending (soft delete)
+- **CSV import** — bulk import transactions from bank CSV files with SHA-256 duplicate detection
+- **CSV export** — download transactions as RFC 4180 compliant CSV
+- **Transfer detection** — TRANSFER transaction type excluded from budget calculations
 - **Category management** — custom income and expense categories
+- **Monthly summary** — aggregated income, expenses, net savings, and per-category totals
 - **Dashboard** — overview of financial activity
 - **Responsive SPA** with Tailwind CSS styling
 
@@ -19,6 +23,7 @@ A personal finance dashboard for tracking budgets, transactions, and net worth a
 | Frontend | Vue 3, TypeScript, Vite, Pinia, Vue Router, Tailwind CSS     |
 | Auth     | Google OAuth2 + JWT (JJWT 0.12.6, RSA-signed)                |
 | Database | PostgreSQL (prod), H2 in-memory (dev)                         |
+| Migrations | Flyway (V1–V4)                                              |
 | Build    | Maven (backend), Vite (frontend)                              |
 | CI       | GitHub Actions                                                |
 
@@ -40,15 +45,13 @@ cd keybudget
 
 ### 2. Quick start (Unix / Git Bash)
 
-The dev startup script auto-generates ephemeral RSA and AES keys, so you can start without any manual configuration. Google OAuth login will be disabled until you add credentials (see step 3).
+The dev startup script auto-generates ephemeral RSA and AES keys and starts both the backend and frontend in a single terminal. Google OAuth login will be disabled until you add credentials (see step 3).
 
 ```bash
-# Terminal 1 — starts the backend with auto-generated keys
-bash scripts/start-dev.sh
-
-# Terminal 2 — starts the frontend dev server
-cd frontend && npm install && npm run dev
+bash scripts/start-dev.sh    # starts backend (port 8080) + frontend (port 5173)
 ```
+
+Press `Ctrl+C` to stop both servers.
 
 ### 2b. Quick start (Windows CMD)
 
@@ -119,8 +122,10 @@ keybudget/
 │       ├── api/            # Axios HTTP layer with token refresh interceptor
 │       └── types/          # TypeScript type definitions
 ├── scripts/                # Dev utility scripts
-│   ├── start-dev.sh        # One-command backend startup (auto-generates keys)
+│   ├── start-dev.sh        # One-command startup for both backend + frontend
 │   └── generate-keys.sh    # RSA key pair generator for JWT signing
+├── docs/                   # Setup guides
+│   └── google-oauth-setup.md
 ├── start-backend.bat       # Windows backend launcher (reads backend/.env)
 └── start-frontend.bat      # Windows frontend launcher
 ```
@@ -142,9 +147,35 @@ All endpoints are prefixed with `/api/v1`.
 |--------|-------------|----------------------|---------------|
 | GET    | `/users/me` | Current user profile | Yes           |
 
-### Budgets, Categories, Transactions
+### Budgets
 
-Standard CRUD endpoints for managing budgets, categories, and transactions. All require authentication.
+| Method | Endpoint                | Description                | Auth Required |
+|--------|-------------------------|----------------------------|---------------|
+| GET    | `/budgets`              | List budgets (month filter)| Yes           |
+| POST   | `/budgets`              | Create a budget            | Yes           |
+| PUT    | `/budgets/{id}`         | Update a budget            | Yes           |
+| DELETE | `/budgets/{id}`         | Soft-delete a budget       | Yes           |
+
+### Categories
+
+| Method | Endpoint                | Description                | Auth Required |
+|--------|-------------------------|----------------------------|---------------|
+| GET    | `/categories`           | List all categories        | Yes           |
+| POST   | `/categories`           | Create a category          | Yes           |
+| PUT    | `/categories/{id}`      | Update a category          | Yes           |
+| DELETE | `/categories/{id}`      | Delete a category          | Yes           |
+
+### Transactions
+
+| Method | Endpoint                       | Description                          | Auth Required |
+|--------|--------------------------------|--------------------------------------|---------------|
+| GET    | `/transactions`                | List transactions (date/category/type filter) | Yes |
+| POST   | `/transactions`                | Create a transaction                 | Yes           |
+| PUT    | `/transactions/{id}`           | Update a transaction                 | Yes           |
+| DELETE | `/transactions/{id}`           | Soft-delete a transaction            | Yes           |
+| POST   | `/transactions/import`         | Import transactions from CSV         | Yes           |
+| GET    | `/transactions/export`         | Export transactions as CSV           | Yes           |
+| GET    | `/transactions/summary`        | Monthly income/expense/category totals | Yes         |
 
 ## Running Tests
 
@@ -177,14 +208,18 @@ npm run build     # TypeScript check + production build
 
 - [x] Google OAuth2 + JWT authentication
 - [x] User profile management
-- [x] Budget and category management
-- [x] Transaction tracking
+- [x] Budget and category management (with soft delete)
+- [x] Transaction tracking (with soft delete)
+- [x] CSV import with duplicate detection
+- [x] CSV export (RFC 4180)
+- [x] Transfer transaction type
+- [x] Flyway database migrations (V1–V4)
 - [x] Vue 3 frontend with dashboard
+- [x] Configurable refresh token expiry
 - [ ] Financial account integrations (Coinbase, Bitcoin, M1 Finance, Marcus)
 - [ ] Net-worth aggregation and history
 - [ ] Scheduled balance syncing
 - [ ] Docker Compose local dev stack
-- [ ] Flyway database migrations
 - [ ] Dark mode
 
 ## License
