@@ -44,6 +44,8 @@ public interface TransactionService {
 
     /**
      * Builds an aggregated monthly summary of income, expenses, and per-category totals.
+     * TRANSFER transactions are excluded from all aggregations — they are not counted
+     * as income, expenses, or category spending.
      *
      * @param userId the authenticated user's id
      * @param month  the calendar month to summarize

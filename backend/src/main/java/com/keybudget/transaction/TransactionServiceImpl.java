@@ -113,8 +113,9 @@ public class TransactionServiceImpl implements TransactionService {
 
         BigDecimal netSavings = totalIncome.subtract(totalExpenses);
 
-        // Group by category, summing amounts
+        // Group by category, summing amounts (exclude TRANSFER transactions)
         Map<Long, BigDecimal> totalsMap = all.stream()
+                .filter(t -> t.getType() != TransactionType.TRANSFER)
                 .collect(Collectors.groupingBy(
                         Transaction::getCategoryId,
                         Collectors.reducing(BigDecimal.ZERO, Transaction::getAmount, BigDecimal::add)
