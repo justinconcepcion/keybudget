@@ -119,7 +119,7 @@ public class PlaidServiceImpl implements PlaidService {
                 .timeout(API_TIMEOUT)
                 .doOnError(ex -> log.error(
                         "Plaid /link/token/create failed for userId={}, provider={}: {}",
-                        userId, provider, ex.getMessage()))
+                        userId, provider, sanitizeErrorMessage(ex)))
                 .onErrorMap(ex -> wrapNonProviderException(provider).apply(ex))
                 .block();
 
@@ -171,7 +171,7 @@ public class PlaidServiceImpl implements PlaidService {
                 .bodyToMono(PlaidPublicTokenExchangeResponse.class)
                 .timeout(API_TIMEOUT)
                 .doOnError(ex -> log.error(
-                        "Plaid /item/public_token/exchange failed: {}", ex.getMessage()))
+                        "Plaid /item/public_token/exchange failed: {}", sanitizeErrorMessage(ex)))
                 .onErrorMap(ex -> wrapNonProviderException(provider).apply(ex))
                 .block();
 
@@ -220,10 +220,10 @@ public class PlaidServiceImpl implements PlaidService {
             }
             if (ex instanceof WebClientResponseException wcEx) {
                 return new ProviderException(provider,
-                        "Plaid API error: " + wcEx.getMessage(), wcEx);
+                        "Plaid API error: HTTP " + wcEx.getStatusCode().value(), wcEx);
             }
             return new ProviderException(provider,
-                    "Failed to reach Plaid API: " + ex.getMessage(), ex);
+                    "Failed to reach Plaid API: " + ex.getClass().getSimpleName(), ex);
         };
     }
 
@@ -233,5 +233,19 @@ public class PlaidServiceImpl implements PlaidService {
 
     private boolean isRateLimit(HttpStatusCode status) {
         return status == HttpStatus.TOO_MANY_REQUESTS;
+    }
+
+    /**
+     * Extracts a safe error description that never includes HTTP response bodies
+     * (which may echo back Plaid credentials).
+     */
+    private String sanitizeErrorMessage(Throwable ex) {
+        if (ex instanceof WebClientResponseException wcEx) {
+            return "HTTP " + wcEx.getStatusCode().value();
+        }
+        if (ex instanceof ProviderException) {
+            return ex.getMessage();
+        }
+        return ex.getClass().getSimpleName();
     }
 }

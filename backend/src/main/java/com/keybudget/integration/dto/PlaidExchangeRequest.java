@@ -3,6 +3,7 @@ package com.keybudget.integration.dto;
 import com.keybudget.integration.ProviderType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 
 /**
  * Request payload for {@code POST /api/v1/integrations/plaid/exchange}.
@@ -17,6 +18,8 @@ import jakarta.validation.constraints.NotNull;
 public record PlaidExchangeRequest(
 
         @NotBlank(message = "publicToken must not be blank")
+        @Pattern(regexp = "^public-(sandbox|development|production)-[a-f0-9\\-]{36}$",
+                message = "publicToken must be a valid Plaid public token")
         String publicToken,
 
         @NotNull(message = "provider is required")
