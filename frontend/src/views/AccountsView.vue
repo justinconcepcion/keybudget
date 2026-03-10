@@ -286,14 +286,30 @@
               connectForm.providerType === 'M1_FINANCE' || connectForm.providerType === 'MARCUS'
             "
           >
-            <div class="rounded-lg border border-gray-100 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-              <p class="font-medium text-gray-700 dark:text-gray-200 mb-1">
-                Secure Bank Login via Plaid
-              </p>
-              <p>
-                Your credentials are entered directly with your bank through Plaid's secure
-                interface — KeyBudget never sees them.
-              </p>
+            <div class="rounded-lg border border-blue-100 dark:border-blue-800 bg-blue-50 dark:bg-blue-950 px-4 py-3 text-sm text-blue-700 dark:text-blue-300 mb-1">
+              Manual balance entry — log into your account and enter your current balance below.
+              You can update it anytime via the sync button.
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Account Name (optional)</label>
+              <input
+                v-model="connectForm.credentials.accountName"
+                type="text"
+                :placeholder="connectForm.providerType === 'M1_FINANCE' ? 'M1 Finance Brokerage' : 'Marcus High-Yield Savings'"
+                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Current Balance ($)</label>
+              <input
+                v-model="connectForm.credentials.balance"
+                type="number"
+                step="0.01"
+                min="0"
+                required
+                placeholder="0.00"
+                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
             </div>
           </template>
 
@@ -304,11 +320,7 @@
             {{ connectFormError }}
           </p>
 
-          <!-- Buttons for credential-based providers -->
-          <div
-            v-if="!plaidProvider"
-            class="flex gap-3 pt-1"
-          >
+          <div class="flex gap-3 pt-1">
             <button
               type="button"
               class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
@@ -322,28 +334,6 @@
               class="flex-1 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {{ submittingConnect ? 'Connecting…' : 'Connect' }}
-            </button>
-          </div>
-
-          <!-- Buttons for Plaid-based providers -->
-          <div
-            v-else
-            class="flex gap-3 pt-1"
-          >
-            <button
-              type="button"
-              class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              @click="showConnectModal = false"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              :disabled="plaidLoading"
-              class="flex-1 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              @click="launchPlaidLink"
-            >
-              {{ plaidLoading ? 'Opening…' : 'Connect via Bank Login' }}
             </button>
           </div>
         </form>
@@ -395,10 +385,8 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, computed, watch, onMounted } from 'vue'
+  import { ref, reactive, watch, onMounted } from 'vue'
   import { useIntegrationsStore } from '@/stores/integrations'
-  import { integrationsApi } from '@/api/integrations'
-  import { usePlaidLink } from '@/composables/usePlaidLink'
   import { formatMoney } from '@/utils/formatting'
   import {
     providerLabel,
@@ -408,7 +396,7 @@
     statusClass,
     timeAgo,
   } from '@/utils/providers'
-  import type { ProviderStatusResponse, ProviderType, PlaidProvider } from '@/types'
+  import type { ProviderStatusResponse, ProviderType } from '@/types'
 
   const store = useIntegrationsStore()
   const syncing = ref<number | null>(null)
@@ -470,72 +458,6 @@
       }
     } finally {
       submittingConnect.value = false
-    }
-  }
-
-  // ── Plaid ──────────────────────────────────────────────────────────────────
-
-  const plaidLoading = ref(false)
-  const plaidLinkToken = ref<string | null>(null)
-  const pendingPlaidProvider = ref<PlaidProvider | null>(null)
-
-  const plaidProvider = computed<PlaidProvider | null>(() =>
-    connectForm.providerType === 'M1_FINANCE' || connectForm.providerType === 'MARCUS'
-      ? (connectForm.providerType as PlaidProvider)
-      : null,
-  )
-
-  // Setup-level composable — safe for onUnmounted lifecycle
-  const { open: openPlaidLink, ready: plaidReady } = usePlaidLink({
-    linkToken: plaidLinkToken,
-    onSuccess: async (publicToken) => {
-      try {
-        if (!pendingPlaidProvider.value) return
-        await integrationsApi.exchangePlaidToken({
-          publicToken,
-          provider: pendingPlaidProvider.value,
-        })
-        await store.fetchAll()
-        showConnectModal.value = false
-        connectForm.providerType = ''
-        connectForm.credentials = {}
-      } catch (err: unknown) {
-        const axiosErr = err as { response?: { data?: { message?: string } } }
-        connectFormError.value =
-          axiosErr?.response?.data?.message || 'Failed to connect account. Please try again.'
-      } finally {
-        plaidLoading.value = false
-        plaidLinkToken.value = null
-        pendingPlaidProvider.value = null
-      }
-    },
-    onExit: () => {
-      plaidLoading.value = false
-      plaidLinkToken.value = null
-      pendingPlaidProvider.value = null
-    },
-  })
-
-  async function launchPlaidLink() {
-    if (!plaidProvider.value) return
-    plaidLoading.value = true
-    connectFormError.value = ''
-    try {
-      const { linkToken } = await integrationsApi.createPlaidLinkToken(plaidProvider.value)
-      pendingPlaidProvider.value = plaidProvider.value
-      plaidLinkToken.value = linkToken
-      // Wait for Plaid SDK to initialize, then open
-      const unwatch = watch(plaidReady, (isReady) => {
-        if (isReady) {
-          unwatch()
-          openPlaidLink()
-        }
-      }, { immediate: true })
-    } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { message?: string } } }
-      connectFormError.value =
-        axiosErr?.response?.data?.message || 'Failed to start bank login. Please try again.'
-      plaidLoading.value = false
     }
   }
 
