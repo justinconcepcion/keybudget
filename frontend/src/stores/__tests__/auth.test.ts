@@ -48,7 +48,7 @@ describe('useAuthStore', () => {
   it('clear resets state', () => {
     const store = useAuthStore()
     store.setAccessToken('token')
-    store.user = { id: 1, email: 'a@b.com', name: 'Test', pictureUrl: null }
+    store.user = { id: 1, email: 'a@b.com', name: 'Test', pictureUrl: null, preferredCurrency: 'USD' }
 
     store.clear()
 

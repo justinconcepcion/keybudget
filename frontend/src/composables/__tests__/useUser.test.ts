@@ -11,7 +11,7 @@ vi.mock('@/api/users', () => ({
 
 import { usersApi } from '@/api/users'
 
-const USER = { id: 1, email: 'test@test.com', name: 'Test User', pictureUrl: null }
+const USER = { id: 1, email: 'test@test.com', name: 'Test User', pictureUrl: null, preferredCurrency: 'USD' }
 
 describe('useUser', () => {
   beforeEach(() => {
