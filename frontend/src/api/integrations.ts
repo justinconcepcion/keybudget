@@ -6,6 +6,9 @@ import type {
   SyncResultResponse,
   NetWorthResponse,
   NetWorthHistoryResponse,
+  PlaidProvider,
+  PlaidLinkTokenResponse,
+  PlaidExchangeRequest,
 } from '@/types'
 
 export const integrationsApi = {
@@ -39,5 +42,15 @@ export const integrationsApi = {
     return api
       .get<NetWorthHistoryResponse>('/integrations/net-worth/history', { params: { days } })
       .then((r) => r.data)
+  },
+
+  createPlaidLinkToken(provider: PlaidProvider): Promise<PlaidLinkTokenResponse> {
+    return api
+      .post<PlaidLinkTokenResponse>('/integrations/plaid/link-token', null, { params: { provider } })
+      .then((r) => r.data)
+  },
+
+  exchangePlaidToken(req: PlaidExchangeRequest): Promise<AccountResponse[]> {
+    return api.post<AccountResponse[]>('/integrations/plaid/exchange', req).then((r) => r.data)
   },
 }

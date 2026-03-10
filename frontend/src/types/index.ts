@@ -218,3 +218,17 @@ export interface NetWorthDataPoint {
   date: string
   totalUsd: number
 }
+
+// ── Plaid ────────────────────────────────────────────────────────────────────
+
+export type PlaidProvider = 'M1_FINANCE' | 'MARCUS'
+
+export interface PlaidLinkTokenResponse {
+  linkToken: string
+  expiration: string
+}
+
+export interface PlaidExchangeRequest {
+  publicToken: string
+  provider: PlaidProvider
+}
