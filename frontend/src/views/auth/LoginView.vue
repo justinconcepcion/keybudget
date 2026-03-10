@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+  <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
     <div class="w-full max-w-sm">
       <!-- Logo -->
       <div class="text-center mb-8">
@@ -20,23 +20,23 @@
             />
           </svg>
         </div>
-        <h1 class="text-2xl font-bold text-gray-900">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
           KeyBudget
         </h1>
-        <p class="mt-1 text-sm text-gray-500">
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Take control of your finances
         </p>
       </div>
 
       <!-- Card -->
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-        <h2 class="text-lg font-semibold text-gray-900 mb-6">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">
           Sign in to your account
         </h2>
 
         <a
           :href="googleOAuthUrl"
-          class="flex items-center justify-center gap-3 w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+          class="flex items-center justify-center gap-3 w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
         >
           <!-- Google G logo -->
           <svg
@@ -63,16 +63,16 @@
           Continue with Google
         </a>
 
-        <p class="mt-6 text-xs text-center text-gray-400">
+        <p class="mt-6 text-xs text-center text-gray-400 dark:text-gray-500">
           By signing in, you agree to our
           <a
             href="#"
-            class="underline hover:text-gray-600"
+            class="underline hover:text-gray-600 dark:hover:text-gray-300"
           >Terms</a>
           and
           <a
             href="#"
-            class="underline hover:text-gray-600"
+            class="underline hover:text-gray-600 dark:hover:text-gray-300"
           >Privacy Policy</a>.
         </p>
       </div>

@@ -2,10 +2,10 @@
   <div class="px-6 py-8 max-w-7xl mx-auto">
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
           Accounts
         </h1>
-        <p class="mt-1 text-sm text-gray-500">
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Manage your connected financial providers.
         </p>
       </div>
@@ -32,16 +32,16 @@
 
     <div
       v-if="store.loading"
-      class="flex items-center justify-center h-64 text-gray-400 text-sm"
+      class="flex items-center justify-center h-64 text-gray-400 dark:text-gray-500 text-sm"
     >
       Loading…
     </div>
 
     <div
       v-else-if="store.error"
-      class="bg-white rounded-2xl border border-gray-200 flex flex-col items-center justify-center h-64 gap-3"
+      class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center h-64 gap-3"
     >
-      <p class="text-sm text-red-600">
+      <p class="text-sm text-red-600 dark:text-red-400">
         {{ store.error }}
       </p>
       <button
@@ -56,13 +56,13 @@
       <!-- Providers -->
       <div
         v-if="store.providers.length === 0"
-        class="bg-white rounded-2xl border border-gray-200 flex items-center justify-center h-64 text-gray-400 text-sm"
+        class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 flex items-center justify-center h-64 text-gray-400 dark:text-gray-500 text-sm"
       >
         <div class="text-center">
-          <p class="font-medium text-gray-500">
+          <p class="font-medium text-gray-500 dark:text-gray-400">
             No providers connected
           </p>
-          <p class="text-xs mt-1">
+          <p class="text-xs mt-1 dark:text-gray-500">
             Connect Coinbase, Bitcoin, or other accounts to get started.
           </p>
         </div>
@@ -75,10 +75,10 @@
         <div
           v-for="provider in store.providers"
           :key="provider.credentialId"
-          class="bg-white rounded-2xl border border-gray-200 overflow-hidden"
+          class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
         >
           <!-- Provider header -->
-          <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+          <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
             <div class="flex items-center gap-3">
               <div
                 class="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold text-white"
@@ -87,10 +87,10 @@
                 {{ providerIcon(provider.providerType) }}
               </div>
               <div>
-                <p class="text-sm font-semibold text-gray-900">
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">
                   {{ providerLabel(provider.providerType) }}
                 </p>
-                <div class="flex items-center gap-2 text-xs text-gray-500">
+                <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                   <span
                     class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-medium"
                     :class="statusClass(provider.status)"
@@ -123,7 +123,7 @@
           <!-- Provider error -->
           <div
             v-if="provider.errorMessage"
-            class="px-6 py-2 bg-red-50 text-sm text-red-700"
+            class="px-6 py-2 bg-red-50 dark:bg-red-950 text-sm text-red-700 dark:text-red-300"
           >
             {{ provider.errorMessage }}
           </div>
@@ -132,34 +132,34 @@
           <div v-if="store.accountsByProvider(provider.credentialId).length > 0">
             <table class="w-full text-sm">
               <thead>
-                <tr class="border-b border-gray-50">
-                  <th class="px-6 py-2 text-left text-xs font-semibold text-gray-500 uppercase">
+                <tr class="border-b border-gray-50 dark:border-gray-700">
+                  <th class="px-6 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
                     Account
                   </th>
-                  <th class="px-6 py-2 text-left text-xs font-semibold text-gray-500 uppercase">
+                  <th class="px-6 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
                     Type
                   </th>
-                  <th class="px-6 py-2 text-right text-xs font-semibold text-gray-500 uppercase">
+                  <th class="px-6 py-2 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
                     Balance
                   </th>
-                  <th class="px-6 py-2 text-right text-xs font-semibold text-gray-500 uppercase">
+                  <th class="px-6 py-2 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
                     USD Value
                   </th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-50">
+              <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
                 <tr
                   v-for="acc in store.accountsByProvider(provider.credentialId)"
                   :key="acc.id"
-                  class="hover:bg-gray-50 transition-colors"
+                  class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
-                  <td class="px-6 py-3 text-gray-800 font-medium">
+                  <td class="px-6 py-3 text-gray-800 dark:text-gray-200 font-medium">
                     {{ acc.displayName }}
                   </td>
-                  <td class="px-6 py-3 text-gray-500">
+                  <td class="px-6 py-3 text-gray-500 dark:text-gray-400">
                     {{ accountTypeLabel(acc.accountType) }}
                   </td>
-                  <td class="px-6 py-3 text-right tabular-nums text-gray-600">
+                  <td class="px-6 py-3 text-right tabular-nums text-gray-600 dark:text-gray-400">
                     {{
                       acc.balance.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
@@ -168,7 +168,7 @@
                     }}
                     {{ acc.currency }}
                   </td>
-                  <td class="px-6 py-3 text-right font-semibold tabular-nums text-gray-900">
+                  <td class="px-6 py-3 text-right font-semibold tabular-nums text-gray-900 dark:text-white">
                     {{ formatMoney(acc.balanceUsd) }}
                   </td>
                 </tr>
@@ -177,7 +177,7 @@
           </div>
           <div
             v-else
-            class="px-6 py-4 text-sm text-gray-400"
+            class="px-6 py-4 text-sm text-gray-400 dark:text-gray-500"
           >
             No accounts discovered yet.
           </div>
@@ -191,13 +191,13 @@
       class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50"
       @mousedown.self="showConnectModal = false"
     >
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
         <div class="flex items-center justify-between mb-5">
-          <h2 class="text-lg font-semibold text-gray-900">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
             Connect Provider
           </h2>
           <button
-            class="text-gray-400 hover:text-gray-600"
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             @click="showConnectModal = false"
           >
             <svg
@@ -221,11 +221,11 @@
           @submit.prevent="submitConnect"
         >
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Provider</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Provider</label>
             <select
               v-model="connectForm.providerType"
               required
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option
                 value=""
@@ -251,33 +251,33 @@
           <!-- Dynamic credential fields -->
           <template v-if="connectForm.providerType === 'COINBASE'">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">API Key</label>
               <input
                 v-model="connectForm.credentials.apiKey"
                 type="text"
                 required
-                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">API Secret</label>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">API Secret</label>
               <input
                 v-model="connectForm.credentials.apiSecret"
                 type="password"
                 required
-                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
             </div>
           </template>
           <template v-else-if="connectForm.providerType === 'BITCOIN_WALLET'">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Bitcoin Address</label>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bitcoin Address</label>
               <input
                 v-model="connectForm.credentials.address"
                 type="text"
                 required
                 placeholder="bc1..."
-                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
             </div>
           </template>
@@ -286,30 +286,44 @@
               connectForm.providerType === 'M1_FINANCE' || connectForm.providerType === 'MARCUS'
             "
           >
-            <div class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-gray-600">
-              <p class="font-medium text-gray-700 mb-1">Secure Bank Login via Plaid</p>
-              <p>
-                Your credentials are entered directly with your bank through Plaid's secure
-                interface — KeyBudget never sees them.
-              </p>
+            <div class="rounded-lg border border-blue-100 dark:border-blue-800 bg-blue-50 dark:bg-blue-950 px-4 py-3 text-sm text-blue-700 dark:text-blue-300 mb-1">
+              Manual balance entry — log into your account and enter your current balance below.
+              You can update it anytime via the sync button.
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Account Name (optional)</label>
+              <input
+                v-model="connectForm.credentials.accountName"
+                type="text"
+                :placeholder="connectForm.providerType === 'M1_FINANCE' ? 'M1 Finance Brokerage' : 'Marcus High-Yield Savings'"
+                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Current Balance ($)</label>
+              <input
+                v-model="connectForm.credentials.balance"
+                type="number"
+                step="0.01"
+                min="0"
+                required
+                placeholder="0.00"
+                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
             </div>
           </template>
 
           <p
             v-if="connectFormError"
-            class="text-sm text-red-600"
+            class="text-sm text-red-600 dark:text-red-400"
           >
             {{ connectFormError }}
           </p>
 
-          <!-- Buttons for credential-based providers -->
-          <div
-            v-if="!plaidProvider"
-            class="flex gap-3 pt-1"
-          >
+          <div class="flex gap-3 pt-1">
             <button
               type="button"
-              class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               @click="showConnectModal = false"
             >
               Cancel
@@ -322,28 +336,6 @@
               {{ submittingConnect ? 'Connecting…' : 'Connect' }}
             </button>
           </div>
-
-          <!-- Buttons for Plaid-based providers -->
-          <div
-            v-else
-            class="flex gap-3 pt-1"
-          >
-            <button
-              type="button"
-              class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              @click="showConnectModal = false"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              :disabled="plaidLoading"
-              class="flex-1 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              @click="launchPlaidLink"
-            >
-              {{ plaidLoading ? 'Opening…' : 'Connect via Bank Login' }}
-            </button>
-          </div>
         </form>
       </div>
     </div>
@@ -354,11 +346,11 @@
       class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50"
       @mousedown.self="showDisconnectModal = false"
     >
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-2">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
           Disconnect Provider
         </h2>
-        <p class="text-sm text-gray-600 mb-5">
+        <p class="text-sm text-gray-600 dark:text-gray-300 mb-5">
           Disconnect
           <span class="font-medium">{{
             providerLabel(disconnectTarget?.providerType ?? 'COINBASE')
@@ -373,7 +365,7 @@
         <div class="flex gap-3">
           <button
             type="button"
-            class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             @click="showDisconnectModal = false"
           >
             Cancel
@@ -393,10 +385,8 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, computed, watch, onMounted } from 'vue'
+  import { ref, reactive, watch, onMounted } from 'vue'
   import { useIntegrationsStore } from '@/stores/integrations'
-  import { integrationsApi } from '@/api/integrations'
-  import { usePlaidLink } from '@/composables/usePlaidLink'
   import { formatMoney } from '@/utils/formatting'
   import {
     providerLabel,
@@ -406,7 +396,7 @@
     statusClass,
     timeAgo,
   } from '@/utils/providers'
-  import type { ProviderStatusResponse, ProviderType, PlaidProvider } from '@/types'
+  import type { ProviderStatusResponse, ProviderType } from '@/types'
 
   const store = useIntegrationsStore()
   const syncing = ref<number | null>(null)
@@ -468,72 +458,6 @@
       }
     } finally {
       submittingConnect.value = false
-    }
-  }
-
-  // ── Plaid ──────────────────────────────────────────────────────────────────
-
-  const plaidLoading = ref(false)
-  const plaidLinkToken = ref<string | null>(null)
-  const pendingPlaidProvider = ref<PlaidProvider | null>(null)
-
-  const plaidProvider = computed<PlaidProvider | null>(() =>
-    connectForm.providerType === 'M1_FINANCE' || connectForm.providerType === 'MARCUS'
-      ? (connectForm.providerType as PlaidProvider)
-      : null,
-  )
-
-  // Setup-level composable — safe for onUnmounted lifecycle
-  const { open: openPlaidLink, ready: plaidReady } = usePlaidLink({
-    linkToken: plaidLinkToken,
-    onSuccess: async (publicToken) => {
-      try {
-        if (!pendingPlaidProvider.value) return
-        await integrationsApi.exchangePlaidToken({
-          publicToken,
-          provider: pendingPlaidProvider.value,
-        })
-        await store.fetchAll()
-        showConnectModal.value = false
-        connectForm.providerType = ''
-        connectForm.credentials = {}
-      } catch (err: unknown) {
-        const axiosErr = err as { response?: { data?: { message?: string } } }
-        connectFormError.value =
-          axiosErr?.response?.data?.message || 'Failed to connect account. Please try again.'
-      } finally {
-        plaidLoading.value = false
-        plaidLinkToken.value = null
-        pendingPlaidProvider.value = null
-      }
-    },
-    onExit: () => {
-      plaidLoading.value = false
-      plaidLinkToken.value = null
-      pendingPlaidProvider.value = null
-    },
-  })
-
-  async function launchPlaidLink() {
-    if (!plaidProvider.value) return
-    plaidLoading.value = true
-    connectFormError.value = ''
-    try {
-      const { linkToken } = await integrationsApi.createPlaidLinkToken(plaidProvider.value)
-      pendingPlaidProvider.value = plaidProvider.value
-      plaidLinkToken.value = linkToken
-      // Wait for Plaid SDK to initialize, then open
-      const unwatch = watch(plaidReady, (isReady) => {
-        if (isReady) {
-          unwatch()
-          openPlaidLink()
-        }
-      }, { immediate: true })
-    } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { message?: string } } }
-      connectFormError.value =
-        axiosErr?.response?.data?.message || 'Failed to start bank login. Please try again.'
-      plaidLoading.value = false
     }
   }
 

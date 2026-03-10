@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50">
+  <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
     <div class="text-center">
       <div
         v-if="error"
@@ -20,10 +20,10 @@
             />
           </svg>
         </div>
-        <p class="text-gray-700 font-medium mb-2">
+        <p class="text-gray-700 dark:text-gray-300 font-medium mb-2">
           Sign-in failed
         </p>
-        <p class="text-sm text-gray-500 mb-4">
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
           {{ error }}
         </p>
         <RouterLink
@@ -57,7 +57,7 @@
             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
           />
         </svg>
-        <p class="text-sm text-gray-500">
+        <p class="text-sm text-gray-500 dark:text-gray-400">
           Signing you in…
         </p>
       </div>

@@ -2,10 +2,10 @@
   <div class="px-6 py-8 max-w-7xl mx-auto">
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
           Budgets
         </h1>
-        <p class="mt-1 text-sm text-gray-500">
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Set limits and stay on track.
         </p>
       </div>
@@ -13,7 +13,7 @@
         <input
           v-model="selectedMonth"
           type="month"
-          class="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           @change="loadBudgets"
         >
         <button
@@ -41,7 +41,7 @@
     <!-- Loading -->
     <div
       v-if="loading"
-      class="flex items-center justify-center py-20 text-gray-400 text-sm"
+      class="flex items-center justify-center py-20 text-gray-400 dark:text-gray-500 text-sm"
     >
       Loading…
     </div>
@@ -49,11 +49,11 @@
     <!-- Empty state -->
     <div
       v-else-if="budgetsStore.budgets.length === 0"
-      class="bg-white rounded-2xl border border-gray-200"
+      class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700"
     >
-      <div class="flex flex-col items-center justify-center py-20 text-gray-400">
+      <div class="flex flex-col items-center justify-center py-20 text-gray-400 dark:text-gray-500">
         <svg
-          class="w-12 h-12 mb-4 text-gray-300"
+          class="w-12 h-12 mb-4 text-gray-300 dark:text-gray-600"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -71,10 +71,10 @@
             d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"
           />
         </svg>
-        <p class="font-medium text-gray-500">
+        <p class="font-medium text-gray-500 dark:text-gray-400">
           No budgets set
         </p>
-        <p class="text-sm mt-1">
+        <p class="text-sm mt-1 dark:text-gray-500">
           Create your first budget to start tracking spending.
         </p>
         <button
@@ -94,7 +94,7 @@
       <div
         v-for="budget in budgetsStore.budgets"
         :key="budget.id"
-        class="bg-white rounded-2xl border border-gray-200 p-5"
+        class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5"
       >
         <!-- Header -->
         <div class="flex items-center justify-between mb-4">
@@ -103,11 +103,11 @@
               class="inline-block w-3 h-3 rounded-full flex-shrink-0"
               :style="{ backgroundColor: budget.categoryColor }"
             />
-            <span class="text-sm font-semibold text-gray-800">{{ budget.categoryName }}</span>
+            <span class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ budget.categoryName }}</span>
           </div>
           <div class="flex items-center gap-1">
             <button
-              class="p-1.5 text-gray-400 hover:text-primary-600 rounded-lg hover:bg-primary-50 transition-colors"
+              class="p-1.5 text-gray-400 hover:text-primary-600 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-colors"
               title="Edit budget"
               @click="openEditModal(budget)"
             >
@@ -126,7 +126,7 @@
               </svg>
             </button>
             <button
-              class="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+              class="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
               title="Delete budget"
               @click="confirmDelete(budget)"
             >
@@ -149,7 +149,7 @@
 
         <!-- Progress bar -->
         <div class="mb-3">
-          <div class="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+          <div class="w-full h-2.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
             <div
               class="h-full rounded-full transition-all"
               :class="budgetBarColor(budget)"
@@ -161,18 +161,18 @@
         <!-- Amounts -->
         <div class="flex justify-between text-sm">
           <div>
-            <p class="text-xs text-gray-400">
+            <p class="text-xs text-gray-400 dark:text-gray-500">
               Spent
             </p>
-            <p class="font-semibold text-gray-800 tabular-nums">
+            <p class="font-semibold text-gray-800 dark:text-gray-200 tabular-nums">
               {{ formatMoney(budget.spentAmount) }}
             </p>
           </div>
           <div class="text-right">
-            <p class="text-xs text-gray-400">
+            <p class="text-xs text-gray-400 dark:text-gray-500">
               Limit
             </p>
-            <p class="font-semibold text-gray-800 tabular-nums">
+            <p class="font-semibold text-gray-800 dark:text-gray-200 tabular-nums">
               {{ formatMoney(budget.limitAmount) }}
             </p>
           </div>
@@ -196,13 +196,13 @@
       class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50"
       @mousedown.self="showAddModal = false"
     >
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
         <div class="flex items-center justify-between mb-5">
-          <h2 class="text-lg font-semibold text-gray-900">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
             New Budget
           </h2>
           <button
-            class="text-gray-400 hover:text-gray-600"
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             @click="showAddModal = false"
           >
             <svg
@@ -227,11 +227,11 @@
         >
           <!-- Category -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
             <select
               v-model.number="addForm.categoryId"
               required
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option
                 value=""
@@ -249,7 +249,7 @@
             </select>
             <p
               v-if="availableExpenseCategories.length === 0"
-              class="mt-1 text-xs text-gray-400"
+              class="mt-1 text-xs text-gray-400 dark:text-gray-500"
             >
               All expense categories already have a budget for this month.
             </p>
@@ -257,18 +257,18 @@
 
           <!-- Month -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Month</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Month</label>
             <input
               v-model="addForm.monthYear"
               type="month"
               required
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
           </div>
 
           <!-- Limit -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Monthly Limit</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Monthly Limit</label>
             <div class="relative">
               <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
               <input
@@ -278,7 +278,7 @@
                 min="0.01"
                 required
                 placeholder="0.00"
-                class="w-full pl-7 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                class="w-full pl-7 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
             </div>
           </div>
@@ -293,7 +293,7 @@
           <div class="flex gap-3 pt-1">
             <button
               type="button"
-              class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               @click="showAddModal = false"
             >
               Cancel
@@ -316,13 +316,13 @@
       class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50"
       @mousedown.self="showEditModal = false"
     >
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
         <div class="flex items-center justify-between mb-5">
-          <h2 class="text-lg font-semibold text-gray-900">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
             Edit Budget — {{ editBudget?.categoryName }}
           </h2>
           <button
-            class="text-gray-400 hover:text-gray-600"
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             @click="showEditModal = false"
           >
             <svg
@@ -346,7 +346,7 @@
           @submit.prevent="submitEdit"
         >
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Monthly Limit</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Monthly Limit</label>
             <div class="relative">
               <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
               <input
@@ -356,7 +356,7 @@
                 min="0.01"
                 required
                 placeholder="0.00"
-                class="w-full pl-7 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                class="w-full pl-7 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
             </div>
           </div>
@@ -371,7 +371,7 @@
           <div class="flex gap-3 pt-1">
             <button
               type="button"
-              class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               @click="showEditModal = false"
             >
               Cancel
@@ -394,18 +394,18 @@
       class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50"
       @mousedown.self="showDeleteModal = false"
     >
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-2">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
           Delete Budget
         </h2>
-        <p class="text-sm text-gray-600 mb-6">
+        <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">
           Are you sure you want to delete the
-          <span class="font-medium text-gray-800">{{ deleteBudget?.categoryName }}</span>
+          <span class="font-medium text-gray-800 dark:text-gray-200">{{ deleteBudget?.categoryName }}</span>
           budget? This action cannot be undone.
         </p>
         <div class="flex gap-3">
           <button
-            class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             @click="showDeleteModal = false"
           >
             Cancel

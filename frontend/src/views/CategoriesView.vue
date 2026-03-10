@@ -2,10 +2,10 @@
   <div class="px-6 py-8 max-w-7xl mx-auto">
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
           Categories
         </h1>
-        <p class="mt-1 text-sm text-gray-500">
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Organize your income and expenses.
         </p>
       </div>
@@ -38,7 +38,7 @@
         class="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
         :class="activeTab === tab.value
           ? 'bg-primary-600 text-white'
-          : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'"
+          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'"
         @click="activeTab = tab.value"
       >
         {{ tab.label }}
@@ -48,19 +48,19 @@
     <!-- Category grid -->
     <div
       v-if="loading"
-      class="flex items-center justify-center h-64 text-gray-400 text-sm"
+      class="flex items-center justify-center h-64 text-gray-400 dark:text-gray-500 text-sm"
     >
       Loading…
     </div>
     <div
       v-else-if="filteredCategories.length === 0"
-      class="bg-white rounded-2xl border border-gray-200 flex items-center justify-center h-64 text-gray-400 text-sm"
+      class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 flex items-center justify-center h-64 text-gray-400 dark:text-gray-500 text-sm"
     >
       <div class="text-center">
-        <p class="font-medium text-gray-500">
+        <p class="font-medium text-gray-500 dark:text-gray-400">
           No {{ activeTab.toLowerCase() }} categories
         </p>
-        <p class="text-xs mt-1">
+        <p class="text-xs mt-1 dark:text-gray-500">
           Create one to get started.
         </p>
       </div>
@@ -72,7 +72,7 @@
       <div
         v-for="cat in filteredCategories"
         :key="cat.id"
-        class="bg-white rounded-2xl border border-gray-200 p-5 flex items-center justify-between hover:shadow-sm transition-shadow"
+        class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 flex items-center justify-between hover:shadow-sm transition-shadow"
       >
         <div class="flex items-center gap-3">
           <div
@@ -82,10 +82,10 @@
             {{ cat.icon || '📁' }}
           </div>
           <div>
-            <p class="text-sm font-medium text-gray-900">
+            <p class="text-sm font-medium text-gray-900 dark:text-white">
               {{ cat.name }}
             </p>
-            <p class="text-xs text-gray-500">
+            <p class="text-xs text-gray-500 dark:text-gray-400">
               {{ cat.type }}
             </p>
           </div>
@@ -95,7 +95,7 @@
           class="flex gap-1"
         >
           <button
-            class="p-1.5 text-gray-400 hover:text-primary-600 rounded-lg hover:bg-primary-50 transition-colors"
+            class="p-1.5 text-gray-400 hover:text-primary-600 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-colors"
             title="Edit"
             @click="openEditModal(cat)"
           >
@@ -114,7 +114,7 @@
             </svg>
           </button>
           <button
-            class="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+            class="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
             title="Delete"
             @click="openDeleteModal(cat)"
           >
@@ -135,7 +135,7 @@
         </div>
         <span
           v-else
-          class="text-xs text-gray-400 italic"
+          class="text-xs text-gray-400 dark:text-gray-500 italic"
         >Default</span>
       </div>
     </div>
@@ -146,13 +146,13 @@
       class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50"
       @mousedown.self="showAddModal = false"
     >
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
         <div class="flex items-center justify-between mb-5">
-          <h2 class="text-lg font-semibold text-gray-900">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
             Add Category
           </h2>
           <button
-            class="text-gray-400 hover:text-gray-600"
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             @click="showAddModal = false"
           >
             <svg
@@ -176,12 +176,12 @@
           @submit.prevent="submitAdd"
         >
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-            <div class="flex rounded-lg border border-gray-300 overflow-hidden text-sm">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+            <div class="flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden text-sm">
               <button
                 type="button"
                 class="flex-1 py-2 transition-colors"
-                :class="addForm.type === 'EXPENSE' ? 'bg-red-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
+                :class="addForm.type === 'EXPENSE' ? 'bg-red-500 text-white' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'"
                 @click="addForm.type = 'EXPENSE'"
               >
                 Expense
@@ -189,7 +189,7 @@
               <button
                 type="button"
                 class="flex-1 py-2 transition-colors"
-                :class="addForm.type === 'INCOME' ? 'bg-emerald-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
+                :class="addForm.type === 'INCOME' ? 'bg-emerald-500 text-white' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'"
                 @click="addForm.type = 'INCOME'"
               >
                 Income
@@ -198,18 +198,18 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
             <input
               v-model="addForm.name"
               type="text"
               required
               placeholder="e.g. Groceries"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Icon
               <span class="text-gray-400 font-normal">(emoji, optional)</span>
             </label>
@@ -218,19 +218,19 @@
               type="text"
               placeholder="e.g. 🛒"
               maxlength="4"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Color
               <span class="text-gray-400 font-normal">(optional)</span>
             </label>
             <input
               v-model="addForm.color"
               type="color"
-              class="w-12 h-9 border border-gray-300 rounded-lg cursor-pointer"
+              class="w-12 h-9 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer"
             >
           </div>
 
@@ -244,7 +244,7 @@
           <div class="flex gap-3 pt-1">
             <button
               type="button"
-              class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               @click="showAddModal = false"
             >
               Cancel
@@ -267,13 +267,13 @@
       class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50"
       @mousedown.self="showEditModal = false"
     >
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
         <div class="flex items-center justify-between mb-5">
-          <h2 class="text-lg font-semibold text-gray-900">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
             Edit Category
           </h2>
           <button
-            class="text-gray-400 hover:text-gray-600"
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             @click="showEditModal = false"
           >
             <svg
@@ -297,12 +297,12 @@
           @submit.prevent="submitEdit"
         >
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-            <div class="flex rounded-lg border border-gray-300 overflow-hidden text-sm">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+            <div class="flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden text-sm">
               <button
                 type="button"
                 class="flex-1 py-2 transition-colors"
-                :class="editForm.type === 'EXPENSE' ? 'bg-red-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
+                :class="editForm.type === 'EXPENSE' ? 'bg-red-500 text-white' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'"
                 @click="editForm.type = 'EXPENSE'"
               >
                 Expense
@@ -310,7 +310,7 @@
               <button
                 type="button"
                 class="flex-1 py-2 transition-colors"
-                :class="editForm.type === 'INCOME' ? 'bg-emerald-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
+                :class="editForm.type === 'INCOME' ? 'bg-emerald-500 text-white' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'"
                 @click="editForm.type = 'INCOME'"
               >
                 Income
@@ -319,17 +319,17 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
             <input
               v-model="editForm.name"
               type="text"
               required
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Icon
               <span class="text-gray-400 font-normal">(emoji, optional)</span>
             </label>
@@ -337,19 +337,19 @@
               v-model="editForm.icon"
               type="text"
               maxlength="4"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Color
               <span class="text-gray-400 font-normal">(optional)</span>
             </label>
             <input
               v-model="editForm.color"
               type="color"
-              class="w-12 h-9 border border-gray-300 rounded-lg cursor-pointer"
+              class="w-12 h-9 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer"
             >
           </div>
 
@@ -363,7 +363,7 @@
           <div class="flex gap-3 pt-1">
             <button
               type="button"
-              class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               @click="showEditModal = false"
             >
               Cancel
@@ -386,11 +386,11 @@
       class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50"
       @mousedown.self="showDeleteModal = false"
     >
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-2">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
           Delete Category
         </h2>
-        <p class="text-sm text-gray-600 mb-5">
+        <p class="text-sm text-gray-600 dark:text-gray-300 mb-5">
           Are you sure you want to delete
           <span class="font-medium">"{{ deleteTarget?.name }}"</span>?
           Transactions using this category may be affected.
@@ -406,7 +406,7 @@
         <div class="flex gap-3">
           <button
             type="button"
-            class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             @click="showDeleteModal = false"
           >
             Cancel

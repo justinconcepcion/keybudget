@@ -23,6 +23,9 @@ application-local.properties
 application-secrets.properties
 application-dev.properties
 
+# Logs
+logs/
+
 # OS
 .DS_Store
 Thumbs.db
