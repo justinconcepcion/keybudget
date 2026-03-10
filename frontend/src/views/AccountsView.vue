@@ -474,6 +474,8 @@
   // ── Plaid ──────────────────────────────────────────────────────────────────
 
   const plaidLoading = ref(false)
+  const plaidLinkToken = ref<string | null>(null)
+  const pendingPlaidProvider = ref<PlaidProvider | null>(null)
 
   const plaidProvider = computed<PlaidProvider | null>(() =>
     connectForm.providerType === 'M1_FINANCE' || connectForm.providerType === 'MARCUS'
@@ -481,38 +483,52 @@
       : null,
   )
 
+  // Setup-level composable — safe for onUnmounted lifecycle
+  const { open: openPlaidLink, ready: plaidReady } = usePlaidLink({
+    linkToken: plaidLinkToken,
+    onSuccess: async (publicToken) => {
+      try {
+        if (!pendingPlaidProvider.value) return
+        await integrationsApi.exchangePlaidToken({
+          publicToken,
+          provider: pendingPlaidProvider.value,
+        })
+        await store.fetchAll()
+        showConnectModal.value = false
+        connectForm.providerType = ''
+        connectForm.credentials = {}
+      } catch (err: unknown) {
+        const axiosErr = err as { response?: { data?: { message?: string } } }
+        connectFormError.value =
+          axiosErr?.response?.data?.message || 'Failed to connect account. Please try again.'
+      } finally {
+        plaidLoading.value = false
+        plaidLinkToken.value = null
+        pendingPlaidProvider.value = null
+      }
+    },
+    onExit: () => {
+      plaidLoading.value = false
+      plaidLinkToken.value = null
+      pendingPlaidProvider.value = null
+    },
+  })
+
   async function launchPlaidLink() {
     if (!plaidProvider.value) return
     plaidLoading.value = true
     connectFormError.value = ''
     try {
       const { linkToken } = await integrationsApi.createPlaidLinkToken(plaidProvider.value)
-
-      const provider = plaidProvider.value
-
-      const { open } = usePlaidLink({
-        linkToken,
-        onSuccess: async (publicToken) => {
-          try {
-            await integrationsApi.exchangePlaidToken({ publicToken, provider })
-            await store.fetchAll()
-            showConnectModal.value = false
-            connectForm.providerType = ''
-            connectForm.credentials = {}
-          } catch (err: unknown) {
-            const axiosErr = err as { response?: { data?: { message?: string } } }
-            connectFormError.value =
-              axiosErr?.response?.data?.message || 'Failed to connect account. Please try again.'
-          } finally {
-            plaidLoading.value = false
-          }
-        },
-        onExit: (_err) => {
-          plaidLoading.value = false
-        },
-      })
-
-      open()
+      pendingPlaidProvider.value = plaidProvider.value
+      plaidLinkToken.value = linkToken
+      // Wait for Plaid SDK to initialize, then open
+      const unwatch = watch(plaidReady, (isReady) => {
+        if (isReady) {
+          unwatch()
+          openPlaidLink()
+        }
+      }, { immediate: true })
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { message?: string } } }
       connectFormError.value =

@@ -42,7 +42,7 @@ public interface PlaidService {
      * @return a {@link PlaidAccessTokenResult} containing the permanent access token and Item ID
      * @throws ProviderException if the Plaid API rejects the public token or is unreachable
      */
-    PlaidAccessTokenResult exchangePublicToken(String publicToken);
+    PlaidAccessTokenResult exchangePublicToken(String publicToken, ProviderType provider);
 
     /**
      * Result of a successful Plaid link-token creation.

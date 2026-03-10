@@ -1,3 +1,5 @@
+import { ref, watch, onUnmounted, type Ref } from 'vue'
+
 // Type declaration for the Plaid Link SDK loaded from CDN
 declare global {
   interface Window {
@@ -37,15 +39,31 @@ export interface PlaidExitMetadata {
   status: string | null
 }
 
-import { ref, onUnmounted } from 'vue'
-
 const PLAID_SCRIPT_URL = 'https://cdn.plaid.com/link/v2/stable/link-initialize.js'
 const PLAID_SCRIPT_ID = 'plaid-link-script'
 
+let scriptLoadPromise: Promise<void> | null = null
+
 function loadPlaidScript(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (document.getElementById(PLAID_SCRIPT_ID)) {
+  if (scriptLoadPromise) return scriptLoadPromise
+  scriptLoadPromise = new Promise((resolve, reject) => {
+    if (window.Plaid) {
       resolve()
+      return
+    }
+    const existing = document.getElementById(PLAID_SCRIPT_ID)
+    if (existing) {
+      // Script tag exists but Plaid not ready yet — poll briefly
+      const check = setInterval(() => {
+        if (window.Plaid) {
+          clearInterval(check)
+          resolve()
+        }
+      }, 50)
+      setTimeout(() => {
+        clearInterval(check)
+        reject(new Error('Plaid SDK load timeout'))
+      }, 10000)
       return
     }
     const script = document.createElement('script')
@@ -55,51 +73,59 @@ function loadPlaidScript(): Promise<void> {
     script.onerror = () => reject(new Error('Failed to load Plaid Link SDK'))
     document.head.appendChild(script)
   })
+  return scriptLoadPromise
 }
 
 export interface UsePlaidLinkOptions {
-  linkToken: string
+  linkToken: Ref<string | null>
   onSuccess: (publicToken: string, metadata: PlaidSuccessMetadata) => void
   onExit?: (err: PlaidExitError | null, metadata: PlaidExitMetadata) => void
 }
 
+/**
+ * Composable for Plaid Link SDK. Must be called at component setup level.
+ * Set linkToken ref to trigger handler creation; call open() to launch.
+ */
 export function usePlaidLink(options: UsePlaidLinkOptions) {
   const ready = ref(false)
   let handler: PlaidHandler | null = null
 
-  loadPlaidScript()
-    .then(() => {
+  function destroyHandler() {
+    handler?.destroy()
+    handler = null
+    ready.value = false
+  }
+
+  watch(options.linkToken, async (token) => {
+    destroyHandler()
+    if (!token) return
+
+    try {
+      await loadPlaidScript()
       handler = window.Plaid.create({
-        token: options.linkToken,
+        token,
         onSuccess: (publicToken, metadata) => {
           options.onSuccess(publicToken, metadata)
         },
         onExit: (err, metadata) => {
-          if (options.onExit) {
-            options.onExit(err, metadata)
-          }
+          options.onExit?.(err, metadata)
         },
         onLoad: () => {
           ready.value = true
         },
       })
-    })
-    .catch((err: unknown) => {
-      console.error('[usePlaidLink] Script load error:', err)
-    })
+    } catch (err) {
+      console.error('[usePlaidLink] Failed to initialize:', err)
+    }
+  })
 
   function open() {
     handler?.open()
   }
 
-  function destroy() {
-    handler?.destroy()
-    handler = null
-  }
-
   onUnmounted(() => {
-    destroy()
+    destroyHandler()
   })
 
-  return { ready, open, destroy }
+  return { ready, open, destroy: destroyHandler }
 }

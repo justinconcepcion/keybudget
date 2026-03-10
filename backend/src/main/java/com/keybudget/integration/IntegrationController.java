@@ -13,7 +13,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Set;
 
 /** REST endpoints for financial provider integrations and net-worth queries. */
 @Validated
@@ -21,11 +20,7 @@ import java.util.Set;
 @RequestMapping("/api/v1/integrations")
 public class IntegrationController {
 
-    /** Providers that may be connected through the Plaid Link flow. */
-    private static final Set<ProviderType> PLAID_PROVIDERS = Set.of(
-            ProviderType.M1_FINANCE,
-            ProviderType.MARCUS
-    );
+    private static final String PLAID_ACCESS_TOKEN_KEY = "plaidAccessToken";
 
     private final IntegrationOrchestrationService orchestrationService;
     private final PlaidService plaidService;
@@ -138,13 +133,8 @@ public class IntegrationController {
             @AuthenticationPrincipal Jwt jwt,
             @RequestParam ProviderType provider) {
 
-        if (!PLAID_PROVIDERS.contains(provider)) {
-            throw new IllegalArgumentException(
-                    "Provider " + provider + " does not support Plaid Link. "
-                    + "Supported providers: M1_FINANCE, MARCUS");
-        }
-
         Long userId = jwt.getClaim("userId");
+        // PlaidService validates that provider is Plaid-backed; throws IllegalArgumentException if not
         PlaidService.PlaidLinkTokenResult result = plaidService.createLinkToken(userId, provider);
         return ResponseEntity.ok(new PlaidLinkTokenResponse(result.linkToken(), result.expiration()));
     }
@@ -168,11 +158,11 @@ public class IntegrationController {
         Long userId = jwt.getClaim("userId");
 
         PlaidService.PlaidAccessTokenResult tokenResult =
-                plaidService.exchangePublicToken(request.publicToken());
+                plaidService.exchangePublicToken(request.publicToken(), request.provider());
 
         ConnectAccountRequest connectRequest = new ConnectAccountRequest(
                 request.provider(),
-                java.util.Map.of("plaidAccessToken", tokenResult.accessToken())
+                java.util.Map.of(PLAID_ACCESS_TOKEN_KEY, tokenResult.accessToken())
         );
 
         List<AccountResponse> accounts = orchestrationService.connectProvider(userId, connectRequest);

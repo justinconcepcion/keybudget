@@ -137,7 +137,7 @@ public class PlaidServiceImpl implements PlaidService {
      * {@inheritDoc}
      */
     @Override
-    public PlaidAccessTokenResult exchangePublicToken(String publicToken) {
+    public PlaidAccessTokenResult exchangePublicToken(String publicToken, ProviderType provider) {
         PlaidPublicTokenExchangeRequest requestBody = new PlaidPublicTokenExchangeRequest(
                 plaidConfig.getClientId(),
                 plaidConfig.getSecret(),
@@ -152,31 +152,31 @@ public class PlaidServiceImpl implements PlaidService {
                 .retrieve()
                 .onStatus(this::isUnauthorized, httpResponse ->
                         Mono.error(new ProviderAuthException(
-                                ProviderType.M1_FINANCE,
+                                provider,
                                 "Plaid rejected the public token — it may have expired or already been exchanged")))
                 .onStatus(this::isRateLimit, httpResponse ->
                         Mono.error(new ProviderRateLimitException(
-                                ProviderType.M1_FINANCE,
+                                provider,
                                 "Plaid API rate limit exceeded on /item/public_token/exchange")))
                 .onStatus(HttpStatusCode::is4xxClientError, httpResponse ->
                         Mono.error(new ProviderException(
-                                ProviderType.M1_FINANCE,
+                                provider,
                                 "Plaid returned client error on /item/public_token/exchange: HTTP "
                                         + httpResponse.statusCode().value())))
                 .onStatus(HttpStatusCode::is5xxServerError, httpResponse ->
                         Mono.error(new ProviderException(
-                                ProviderType.M1_FINANCE,
+                                provider,
                                 "Plaid returned server error on /item/public_token/exchange: HTTP "
                                         + httpResponse.statusCode().value())))
                 .bodyToMono(PlaidPublicTokenExchangeResponse.class)
                 .timeout(API_TIMEOUT)
                 .doOnError(ex -> log.error(
                         "Plaid /item/public_token/exchange failed: {}", ex.getMessage()))
-                .onErrorMap(ex -> wrapNonProviderException(ProviderType.M1_FINANCE).apply(ex))
+                .onErrorMap(ex -> wrapNonProviderException(provider).apply(ex))
                 .block();
 
         if (response == null || response.accessToken() == null) {
-            throw new ProviderException(ProviderType.M1_FINANCE,
+            throw new ProviderException(provider,
                     "Plaid returned an empty token exchange response");
         }
 
