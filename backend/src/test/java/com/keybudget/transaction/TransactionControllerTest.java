@@ -18,6 +18,8 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -72,7 +74,8 @@ class TransactionControllerTest {
         MockMultipartFile file = new MockMultipartFile("file", "test.csv", "text/csv",
                 "Date,Description,Amount\n".getBytes(StandardCharsets.UTF_8));
 
-        mockMvc.perform(multipart("/api/v1/transactions/import").file(file))
+        // CSRF token provided so the CSRF filter passes; auth check then returns 401
+        mockMvc.perform(multipart("/api/v1/transactions/import").file(file).with(csrf()))
                 .andExpect(status().isUnauthorized());
     }
 
