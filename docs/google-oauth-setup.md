@@ -92,6 +92,7 @@ The three scopes provide:
 | **"Google hasn't verified this app" warning** | Expected in Testing mode. Click **Continue** to proceed. Only test users you added can see this. |
 | **403 after sign-in** | Make sure your Gmail is listed as a test user on the OAuth consent screen. |
 | **Vue frontend on port 5173** | The OAuth flow goes through the Spring Boot backend (8080), not the Vue dev server. The frontend calls the backend's OAuth endpoint. No Google Console changes needed for port 5173. |
+| **`redirect_uri` override in properties** | Do NOT set `redirect-uri` in application properties — Spring Security's default template `{baseUrl}/login/oauth2/code/{registrationId}` auto-resolves to the correct backend port (8080). Overriding it to port 5173 causes a `redirect_uri_mismatch` error. |
 
 ## Reference
 
