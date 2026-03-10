@@ -11,13 +11,16 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -118,6 +121,43 @@ public class TransactionController {
             @RequestParam(value = "categoryId", required = false) Long defaultCategoryId) {
         Long userId = jwt.getClaim("userId");
         return ResponseEntity.ok(csvImportService.importCsv(userId, file, defaultCategoryId));
+    }
+
+    /**
+     * GET /api/v1/transactions/export?format=csv&start=2026-01-01&end=2026-03-31
+     * Streams all transactions for the authenticated user in the requested date range as a
+     * CSV file. The response is streamed directly to avoid buffering the entire dataset in
+     * memory. The {@code format} parameter is validated to only accept {@code csv}.
+     *
+     * @param start  inclusive start date (defaults to first day of current month)
+     * @param end    inclusive end date (defaults to today)
+     * @param format must be {@code csv}; any other value results in a 400
+     */
+    @GetMapping("/export")
+    public ResponseEntity<StreamingResponseBody> exportCsv(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestParam(defaultValue = "csv") String format,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
+
+        if (!"csv".equalsIgnoreCase(format)) {
+            throw new IllegalArgumentException("Unsupported export format: " + format);
+        }
+
+        Long userId = jwt.getClaim("userId");
+
+        LocalDate effectiveStart = start != null ? start : LocalDate.now().withDayOfMonth(1);
+        LocalDate effectiveEnd = end != null ? end : LocalDate.now();
+
+        String filename = "transactions_" + effectiveStart + "_" + effectiveEnd + ".csv";
+
+        StreamingResponseBody body = transactionService.exportTransactions(userId, effectiveStart, effectiveEnd);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .header(HttpHeaders.CACHE_CONTROL, "no-cache")
+                .body(body);
     }
 
     /**

@@ -120,4 +120,20 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
            "AND t.date BETWEEN :start AND :end " +
            "GROUP BY t.categoryId")
     List<Object[]> sumExpensesByCategory(Long userId, LocalDate start, LocalDate end);
+
+    /**
+     * Returns all transactions for a user within a date range, ordered by date ascending
+     * then by id ascending. Used for deterministic CSV export output.
+     * Soft-deleted rows are excluded automatically via the {@code @SQLRestriction} on
+     * {@link Transaction}.
+     *
+     * @param userId the owning user's id
+     * @param start  inclusive start date
+     * @param end    inclusive end date
+     * @return ordered list of matching transactions
+     */
+    @Query("SELECT t FROM Transaction t WHERE t.userId = :userId " +
+           "AND t.date BETWEEN :start AND :end ORDER BY t.date ASC, t.id ASC")
+    List<Transaction> findByUserIdAndDateBetweenOrderByDateAscIdAsc(
+            Long userId, LocalDate start, LocalDate end);
 }

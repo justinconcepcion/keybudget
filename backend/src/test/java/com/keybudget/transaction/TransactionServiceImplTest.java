@@ -17,14 +17,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Optional;
-
-import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -334,6 +336,149 @@ class TransactionServiceImplTest {
         assertThatThrownBy(() -> transactionService.deleteTransaction(userId, 999L))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Transaction not found");
+    }
+
+    // -------------------------------------------------------------------------
+    // exportTransactions
+    // -------------------------------------------------------------------------
+
+    @Test
+    void exportTransactions_givenTransactions_writesCsvWithHeader() throws Exception {
+        Long userId = 1L;
+        LocalDate start = LocalDate.of(2026, 3, 1);
+        LocalDate end = LocalDate.of(2026, 3, 31);
+
+        Category cat = buildCategory(5L, "Food");
+        Transaction tx = buildTransaction(10L, userId, 5L, new BigDecimal("12.50"), TransactionType.EXPENSE);
+        tx.setDescription("Lunch");
+
+        when(categoryRepository.findByUserIdOrUserIdIsNull(userId)).thenReturn(List.of(cat));
+        when(transactionRepository.findByUserIdAndDateBetweenOrderByDateAscIdAsc(userId, start, end))
+                .thenReturn(List.of(tx));
+
+        StreamingResponseBody body = transactionService.exportTransactions(userId, start, end);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        body.writeTo(out);
+        String csv = out.toString(StandardCharsets.UTF_8);
+
+        assertThat(csv).startsWith("Date,Description,Amount,Category,Type\r\n");
+        assertThat(csv).contains("2026-03-15");
+        assertThat(csv).contains("Lunch");
+        assertThat(csv).contains("12.50");
+        assertThat(csv).contains("Food");
+        assertThat(csv).contains("EXPENSE");
+    }
+
+    @Test
+    void exportTransactions_givenNoTransactions_writesHeaderOnly() throws Exception {
+        Long userId = 1L;
+        LocalDate start = LocalDate.of(2026, 3, 1);
+        LocalDate end = LocalDate.of(2026, 3, 31);
+
+        when(categoryRepository.findByUserIdOrUserIdIsNull(userId)).thenReturn(List.of());
+        when(transactionRepository.findByUserIdAndDateBetweenOrderByDateAscIdAsc(userId, start, end))
+                .thenReturn(List.of());
+
+        StreamingResponseBody body = transactionService.exportTransactions(userId, start, end);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        body.writeTo(out);
+        String csv = out.toString(StandardCharsets.UTF_8);
+
+        assertThat(csv).isEqualTo("Date,Description,Amount,Category,Type\r\n");
+    }
+
+    @Test
+    void exportTransactions_givenNullDescription_writesEmptyField() throws Exception {
+        Long userId = 1L;
+        LocalDate start = LocalDate.of(2026, 3, 1);
+        LocalDate end = LocalDate.of(2026, 3, 31);
+
+        Category cat = buildCategory(5L, "Food");
+        Transaction tx = buildTransaction(10L, userId, 5L, new BigDecimal("5.00"), TransactionType.EXPENSE);
+        // description is null by default from buildTransaction
+
+        when(categoryRepository.findByUserIdOrUserIdIsNull(userId)).thenReturn(List.of(cat));
+        when(transactionRepository.findByUserIdAndDateBetweenOrderByDateAscIdAsc(userId, start, end))
+                .thenReturn(List.of(tx));
+
+        StreamingResponseBody body = transactionService.exportTransactions(userId, start, end);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        body.writeTo(out);
+        String csv = out.toString(StandardCharsets.UTF_8);
+
+        // Null description must produce an empty field, not "null"
+        assertThat(csv).contains("2026-03-15,,5.00,Food,EXPENSE");
+    }
+
+    @Test
+    void exportTransactions_givenDescriptionWithComma_quotesField() throws Exception {
+        Long userId = 1L;
+        LocalDate start = LocalDate.of(2026, 3, 1);
+        LocalDate end = LocalDate.of(2026, 3, 31);
+
+        Category cat = buildCategory(5L, "Food");
+        Transaction tx = buildTransaction(10L, userId, 5L, new BigDecimal("8.75"), TransactionType.EXPENSE);
+        tx.setDescription("Coffee, latte");
+
+        when(categoryRepository.findByUserIdOrUserIdIsNull(userId)).thenReturn(List.of(cat));
+        when(transactionRepository.findByUserIdAndDateBetweenOrderByDateAscIdAsc(userId, start, end))
+                .thenReturn(List.of(tx));
+
+        StreamingResponseBody body = transactionService.exportTransactions(userId, start, end);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        body.writeTo(out);
+        String csv = out.toString(StandardCharsets.UTF_8);
+
+        assertThat(csv).contains("\"Coffee, latte\"");
+    }
+
+    @Test
+    void exportTransactions_givenDescriptionWithDoubleQuote_escapesQuotes() throws Exception {
+        Long userId = 1L;
+        LocalDate start = LocalDate.of(2026, 3, 1);
+        LocalDate end = LocalDate.of(2026, 3, 31);
+
+        Category cat = buildCategory(5L, "Food");
+        Transaction tx = buildTransaction(10L, userId, 5L, new BigDecimal("3.00"), TransactionType.EXPENSE);
+        tx.setDescription("Say \"hello\"");
+
+        when(categoryRepository.findByUserIdOrUserIdIsNull(userId)).thenReturn(List.of(cat));
+        when(transactionRepository.findByUserIdAndDateBetweenOrderByDateAscIdAsc(userId, start, end))
+                .thenReturn(List.of(tx));
+
+        StreamingResponseBody body = transactionService.exportTransactions(userId, start, end);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        body.writeTo(out);
+        String csv = out.toString(StandardCharsets.UTF_8);
+
+        assertThat(csv).contains("\"Say \"\"hello\"\"\"");
+    }
+
+    @Test
+    void exportTransactions_givenUnknownCategory_writesUnknown() throws Exception {
+        Long userId = 1L;
+        LocalDate start = LocalDate.of(2026, 3, 1);
+        LocalDate end = LocalDate.of(2026, 3, 31);
+
+        Transaction tx = buildTransaction(10L, userId, 999L, new BigDecimal("20.00"), TransactionType.EXPENSE);
+        tx.setDescription("Mystery");
+
+        when(categoryRepository.findByUserIdOrUserIdIsNull(userId)).thenReturn(List.of());
+        when(transactionRepository.findByUserIdAndDateBetweenOrderByDateAscIdAsc(userId, start, end))
+                .thenReturn(List.of(tx));
+
+        StreamingResponseBody body = transactionService.exportTransactions(userId, start, end);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        body.writeTo(out);
+        String csv = out.toString(StandardCharsets.UTF_8);
+
+        assertThat(csv).contains("Unknown");
     }
 
     // -------------------------------------------------------------------------

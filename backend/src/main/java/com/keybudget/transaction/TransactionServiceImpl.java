@@ -12,8 +12,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.BufferedWriter;
+import java.io.OutputStreamWriter;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
@@ -38,16 +43,10 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     @Transactional(readOnly = true)
     public Page<TransactionResponse> getTransactions(
-            Long userId,
-            LocalDate start,
-            LocalDate end,
-            Long categoryId,
-            TransactionType type,
-            Pageable pageable) {
+            Long userId, LocalDate start, LocalDate end,
+            Long categoryId, TransactionType type, Pageable pageable) {
 
-        // Build a lookup map for category names from the user's visible categories
         Map<Long, String> categoryNames = buildCategoryNameMap(userId);
-
         Page<Transaction> page;
 
         if (categoryId != null && type != null) {
@@ -70,7 +69,6 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     @Transactional
     public TransactionResponse createTransaction(Long userId, CreateTransactionRequest req) {
-        // Verify the category exists and is accessible to this user
         categoryRepository.findByUserIdOrUserIdIsNull(userId).stream()
                 .filter(c -> c.getId().equals(req.categoryId()))
                 .findFirst()
@@ -86,7 +84,6 @@ public class TransactionServiceImpl implements TransactionService {
         tx.setType(req.type());
 
         Transaction saved = transactionRepository.save(tx);
-
         Map<Long, String> categoryNames = buildCategoryNameMap(userId);
         return toResponse(saved, categoryNames);
     }
@@ -113,9 +110,6 @@ public class TransactionServiceImpl implements TransactionService {
 
         BigDecimal netSavings = totalIncome.subtract(totalExpenses);
 
-        // Group INCOME and EXPENSE transactions by category, summing amounts.
-        // TRANSFER transactions are deliberately excluded — they represent money moved
-        // between accounts and must not inflate category spending figures.
         Map<Long, BigDecimal> totalsMap = all.stream()
                 .filter(t -> t.getType() == TransactionType.INCOME
                         || t.getType() == TransactionType.EXPENSE)
@@ -128,8 +122,7 @@ public class TransactionServiceImpl implements TransactionService {
                 .map(e -> new CategoryTotal(
                         e.getKey(),
                         categoryNames.getOrDefault(e.getKey(), "Unknown"),
-                        e.getValue()
-                ))
+                        e.getValue()))
                 .toList();
 
         return new MonthlySummaryResponse(totalIncome, totalExpenses, netSavings, byCategory);
@@ -167,9 +160,34 @@ public class TransactionServiceImpl implements TransactionService {
         transactionRepository.save(tx);
     }
 
-    // -------------------------------------------------------------------------
-    // Private helpers
-    // -------------------------------------------------------------------------
+    /** {@inheritDoc} */
+    @Override
+    @Transactional(readOnly = true)
+    public StreamingResponseBody exportTransactions(Long userId, LocalDate start, LocalDate end) {
+        List<Transaction> transactions =
+                transactionRepository.findByUserIdAndDateBetweenOrderByDateAscIdAsc(userId, start, end);
+        Map<Long, String> categoryNames = buildCategoryNameMap(userId);
+
+        return outputStream -> {
+            try (BufferedWriter writer = new BufferedWriter(
+                    new OutputStreamWriter(outputStream, StandardCharsets.UTF_8))) {
+                // RFC 4180 requires CRLF line endings
+                writer.write("Date,Description,Amount,Category,Type\r\n");
+                for (Transaction t : transactions) {
+                    writer.write(escapeCsvField(t.getDate().toString()));
+                    writer.write(',');
+                    writer.write(escapeCsvField(t.getDescription() != null ? t.getDescription() : ""));
+                    writer.write(',');
+                    writer.write(escapeCsvField(t.getAmount().toPlainString()));
+                    writer.write(',');
+                    writer.write(escapeCsvField(categoryNames.getOrDefault(t.getCategoryId(), "Unknown")));
+                    writer.write(',');
+                    writer.write(escapeCsvField(t.getType().name()));
+                    writer.write("\r\n");
+                }
+            }
+        };
+    }
 
     private Map<Long, String> buildCategoryNameMap(Long userId) {
         return categoryRepository.findByUserIdOrUserIdIsNull(userId).stream()
@@ -184,7 +202,21 @@ public class TransactionServiceImpl implements TransactionService {
                 t.getDate(),
                 t.getType(),
                 t.getCategoryId(),
-                categoryNames.getOrDefault(t.getCategoryId(), "Unknown")
-        );
+                categoryNames.getOrDefault(t.getCategoryId(), "Unknown"));
+    }
+
+    /**
+     * Escapes a single CSV field per RFC 4180. If the value contains a comma, double-quote,
+     * or newline, it is wrapped in double-quotes and internal double-quotes are doubled.
+     *
+     * @param value the raw field value (never null)
+     * @return the escaped field ready to be written to the CSV stream
+     */
+    private String escapeCsvField(String value) {
+        if (value.indexOf(',') >= 0 || value.indexOf('"') >= 0
+                || value.indexOf('\n') >= 0 || value.indexOf('\r') >= 0) {
+            return '"' + value.replace("\"", "\"\"") + '"';
+        }
+        return value;
     }
 }
