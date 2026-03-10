@@ -19,9 +19,13 @@ frontend/.vite/
 .env
 .env.local
 .env.*.local
+.env.prod
 application-local.properties
 application-secrets.properties
 application-dev.properties
+
+# TLS certificates
+nginx/certs/
 
 # Logs
 logs/
