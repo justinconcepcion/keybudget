@@ -6,6 +6,7 @@ import com.keybudget.transaction.dto.TransactionResponse;
 import com.keybudget.transaction.dto.UpdateTransactionRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -44,6 +45,7 @@ public interface TransactionService {
 
     /**
      * Builds an aggregated monthly summary of income, expenses, and per-category totals.
+     * TRANSFER transactions are excluded from all aggregations.
      *
      * @param userId the authenticated user's id
      * @param month  the calendar month to summarize
@@ -54,4 +56,21 @@ public interface TransactionService {
     TransactionResponse updateTransaction(Long userId, Long transactionId, UpdateTransactionRequest req);
 
     void deleteTransaction(Long userId, Long transactionId);
+
+    /**
+     * Produces a {@link StreamingResponseBody} that writes CSV rows for all transactions
+     * belonging to the given user within the specified date range. Rows are ordered by
+     * date ascending, then by id ascending for deterministic output. The first row is a
+     * header line: {@code Date,Description,Amount,Category,Type}.
+     *
+     * <p>CSV fields are RFC 4180 compliant: any field containing a comma, double-quote,
+     * or newline is wrapped in double-quotes and internal double-quotes are escaped by
+     * doubling them.
+     *
+     * @param userId the authenticated user's id
+     * @param start  inclusive start date
+     * @param end    inclusive end date
+     * @return a streaming body that can be passed directly to a {@code ResponseEntity}
+     */
+    StreamingResponseBody exportTransactions(Long userId, LocalDate start, LocalDate end);
 }
