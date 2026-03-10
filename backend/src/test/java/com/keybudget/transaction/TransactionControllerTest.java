@@ -117,6 +117,24 @@ class TransactionControllerTest {
     }
 
     @Test
+    void getTransactions_givenTransferTypeFilter_200() throws Exception {
+        TransactionResponse tx = new TransactionResponse(
+                5L, new BigDecimal("500.00"), "Bank to brokerage",
+                LocalDate.of(2026, 3, 10), TransactionType.TRANSFER, 7L, "Transfers");
+
+        when(transactionService.getTransactions(
+                eq(1L), any(LocalDate.class), any(LocalDate.class),
+                isNull(), eq(TransactionType.TRANSFER), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(tx)));
+
+        mockMvc.perform(get("/api/v1/transactions?type=TRANSFER")
+                        .with(jwt().jwt(j -> j.claim("userId", 1L))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].type").value("TRANSFER"));
+    }
+
+    @Test
     void getTransactions_givenNoJwt_401() throws Exception {
         mockMvc.perform(get("/api/v1/transactions"))
                 .andExpect(status().isUnauthorized());
