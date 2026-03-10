@@ -79,8 +79,14 @@ echo "Starting KeyBudget..."
 echo "  Backend:  http://localhost:8080"
 echo "  Frontend: http://localhost:5173"
 echo "  Health:   http://localhost:8080/actuator/health"
+echo "  Logs:     $PROJECT_DIR/logs/"
 echo "  Press Ctrl+C to stop both servers"
 echo ""
+
+# Create logs directory
+LOG_DIR="$PROJECT_DIR/logs"
+mkdir -p "$LOG_DIR"
+export LOG_DIR
 
 # Install frontend deps if needed
 if [ ! -d "$FRONTEND_DIR/node_modules" ]; then
@@ -88,14 +94,14 @@ if [ ! -d "$FRONTEND_DIR/node_modules" ]; then
     (cd "$FRONTEND_DIR" && npm install) || { echo "ERROR: npm install failed"; exit 1; }
 fi
 
-# Start frontend in background
+# Start frontend in background — tee to log file
 cd "$FRONTEND_DIR"
-npx vite --host &
+npx vite --host 2>&1 | tee "$LOG_DIR/frontend.log" &
 FRONTEND_PID=$!
 
-# Start backend in background
+# Start backend in background (logback-spring.xml writes to LOG_DIR/backend.log)
 cd "$BACKEND_DIR"
-./mvnw spring-boot:run -Dspring-boot.run.profiles=dev &
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev "-Dspring-boot.run.jvmArguments=-DLOG_DIR=$LOG_DIR" 2>&1 | tee "$LOG_DIR/backend-console.log" &
 BACKEND_PID=$!
 
 echo "Frontend PID: $FRONTEND_PID | Backend PID: $BACKEND_PID"

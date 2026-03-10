@@ -2,42 +2,52 @@
   <div class="px-6 py-8 max-w-7xl mx-auto">
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
           Transactions
         </h1>
-        <p class="mt-1 text-sm text-gray-500">
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Track every dollar in and out.
         </p>
       </div>
       <div class="flex items-center gap-2">
-      <button
-        class="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-        @click="showImportModal = true"
-      >
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-        </svg>
-        Import CSV
-      </button>
-      <button
-        class="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
-        @click="showAddModal = true"
-      >
-        <svg
-          class="w-4 h-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="2"
+        <button
+          class="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          @click="showImportModal = true"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M12 4v16m8-8H4"
-          />
-        </svg>
-        Add Transaction
-      </button>
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+            />
+          </svg>
+          Import CSV
+        </button>
+        <button
+          class="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
+          @click="showAddModal = true"
+        >
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          Add Transaction
+        </button>
       </div>
     </div>
 
@@ -110,16 +120,16 @@
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-2xl border border-gray-200 p-4 mb-4 flex flex-wrap gap-3">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 mb-4 flex flex-wrap gap-3">
       <input
         v-model="selectedMonth"
         type="month"
-        class="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         @change="onFilterChange"
       >
       <select
         v-model="selectedCategoryId"
-        class="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         @change="onFilterChange"
       >
         <option value="">
@@ -133,7 +143,7 @@
           {{ cat.name }}
         </option>
       </select>
-      <div class="flex rounded-lg border border-gray-300 overflow-hidden text-sm">
+      <div class="flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden text-sm">
         <button
           v-for="opt in typeOptions"
           :key="opt.value"
@@ -141,7 +151,7 @@
           :class="
             selectedType === opt.value
               ? 'bg-primary-600 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-50'
+              : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
           "
           @click="selectType(opt.value)"
         >
@@ -151,20 +161,20 @@
     </div>
 
     <!-- Transaction list -->
-    <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
       <div
         v-if="loading"
-        class="flex items-center justify-center h-64 text-gray-400 text-sm"
+        class="flex items-center justify-center h-64 text-gray-400 dark:text-gray-500 text-sm"
       >
         Loading…
       </div>
       <div
         v-else-if="transactionsStore.transactions.length === 0"
-        class="flex items-center justify-center h-64 text-gray-400 text-sm"
+        class="flex items-center justify-center h-64 text-gray-400 dark:text-gray-500 text-sm"
       >
         <div class="text-center">
           <svg
-            class="w-10 h-10 mx-auto mb-3 text-gray-300"
+            class="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-600"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -176,10 +186,10 @@
               d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
             />
           </svg>
-          <p class="font-medium text-gray-500">
+          <p class="font-medium text-gray-500 dark:text-gray-400">
             No transactions found
           </p>
-          <p class="text-xs mt-1">
+          <p class="text-xs mt-1 dark:text-gray-500">
             Add your first transaction to get started.
           </p>
         </div>
@@ -189,39 +199,39 @@
         class="w-full text-sm"
       >
         <thead>
-          <tr class="border-b border-gray-100 text-left">
-            <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+          <tr class="border-b border-gray-100 dark:border-gray-700 text-left">
+            <th class="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Date
             </th>
-            <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+            <th class="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Description
             </th>
-            <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+            <th class="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Category
             </th>
             <th
-              class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide text-right"
+              class="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide text-right"
             >
               Amount
             </th>
-            <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-20">
+            <th class="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide w-20">
               Actions
             </th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-50">
+        <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
           <tr
             v-for="tx in transactionsStore.transactions"
             :key="tx.id"
-            class="hover:bg-gray-50 transition-colors"
+            class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
-            <td class="px-6 py-4 text-gray-500 tabular-nums whitespace-nowrap">
+            <td class="px-6 py-4 text-gray-500 dark:text-gray-400 tabular-nums whitespace-nowrap">
               {{ formatDate(tx.date) }}
             </td>
-            <td class="px-6 py-4 text-gray-800 font-medium">
+            <td class="px-6 py-4 text-gray-800 dark:text-gray-200 font-medium">
               {{ tx.description || '—' }}
             </td>
-            <td class="px-6 py-4 text-gray-500">
+            <td class="px-6 py-4 text-gray-500 dark:text-gray-400">
               {{ tx.categoryName }}
             </td>
             <td
@@ -280,7 +290,7 @@
     <!-- Pagination -->
     <div
       v-if="transactionsStore.pagination.totalPages > 1"
-      class="flex items-center justify-between mt-4 text-sm text-gray-600"
+      class="flex items-center justify-between mt-4 text-sm text-gray-600 dark:text-gray-400"
     >
       <span>
         Page {{ transactionsStore.pagination.currentPage + 1 }} of
@@ -289,14 +299,14 @@
       </span>
       <div class="flex gap-2">
         <button
-          class="px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           :disabled="transactionsStore.pagination.currentPage === 0"
           @click="changePage(transactionsStore.pagination.currentPage - 1)"
         >
           Previous
         </button>
         <button
-          class="px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           :disabled="
             transactionsStore.pagination.currentPage === transactionsStore.pagination.totalPages - 1
           "
@@ -313,13 +323,13 @@
       class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50"
       @mousedown.self="showAddModal = false"
     >
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
         <div class="flex items-center justify-between mb-5">
-          <h2 class="text-lg font-semibold text-gray-900">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
             Add Transaction
           </h2>
           <button
-            class="text-gray-400 hover:text-gray-600"
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             @click="showAddModal = false"
           >
             <svg
@@ -344,15 +354,15 @@
         >
           <!-- Type toggle -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-            <div class="flex rounded-lg border border-gray-300 overflow-hidden text-sm">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+            <div class="flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden text-sm">
               <button
                 type="button"
                 class="flex-1 py-2 transition-colors"
                 :class="
                   form.type === 'EXPENSE'
                     ? 'bg-red-500 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
                 "
                 @click="form.type = 'EXPENSE'"
               >
@@ -364,7 +374,7 @@
                 :class="
                   form.type === 'INCOME'
                     ? 'bg-emerald-500 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
                 "
                 @click="form.type = 'INCOME'"
               >
@@ -375,7 +385,7 @@
 
           <!-- Amount -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount</label>
             <div class="relative">
               <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
               <input
@@ -385,14 +395,14 @@
                 min="0.01"
                 required
                 placeholder="0.00"
-                class="w-full pl-7 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                class="w-full pl-7 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
             </div>
           </div>
 
           <!-- Description -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Description
               <span class="text-gray-400 font-normal">(optional)</span>
             </label>
@@ -400,28 +410,28 @@
               v-model="form.description"
               type="text"
               placeholder="e.g. Grocery run"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
           </div>
 
           <!-- Date -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
             <input
               v-model="form.date"
               type="date"
               required
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
           </div>
 
           <!-- Category -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
             <select
               v-model.number="form.categoryId"
               required
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option
                 value=""
@@ -451,7 +461,7 @@
           <div class="flex gap-3 pt-1">
             <button
               type="button"
-              class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               @click="showAddModal = false"
             >
               Cancel
@@ -474,13 +484,13 @@
       class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50"
       @mousedown.self="showEditModal = false"
     >
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
         <div class="flex items-center justify-between mb-5">
-          <h2 class="text-lg font-semibold text-gray-900">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
             Edit Transaction
           </h2>
           <button
-            class="text-gray-400 hover:text-gray-600"
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             @click="showEditModal = false"
           >
             <svg
@@ -504,12 +514,12 @@
           @submit.prevent="submitEdit"
         >
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-            <div class="flex rounded-lg border border-gray-300 overflow-hidden text-sm">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+            <div class="flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden text-sm">
               <button
                 type="button"
                 class="flex-1 py-2 transition-colors"
-                :class="editForm.type === 'EXPENSE' ? 'bg-red-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
+                :class="editForm.type === 'EXPENSE' ? 'bg-red-500 text-white' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'"
                 @click="editForm.type = 'EXPENSE'"
               >
                 Expense
@@ -517,7 +527,7 @@
               <button
                 type="button"
                 class="flex-1 py-2 transition-colors"
-                :class="editForm.type === 'INCOME' ? 'bg-emerald-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
+                :class="editForm.type === 'INCOME' ? 'bg-emerald-500 text-white' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'"
                 @click="editForm.type = 'INCOME'"
               >
                 Income
@@ -526,7 +536,7 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount</label>
             <div class="relative">
               <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
               <input
@@ -535,39 +545,39 @@
                 step="0.01"
                 min="0.01"
                 required
-                class="w-full pl-7 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                class="w-full pl-7 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
             </div>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Description
               <span class="text-gray-400 font-normal">(optional)</span>
             </label>
             <input
               v-model="editForm.description"
               type="text"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
             <input
               v-model="editForm.date"
               type="date"
               required
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
             <select
               v-model.number="editForm.categoryId"
               required
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option
                 value=""
@@ -595,7 +605,7 @@
           <div class="flex gap-3 pt-1">
             <button
               type="button"
-              class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               @click="showEditModal = false"
             >
               Cancel
@@ -618,11 +628,11 @@
       class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50"
       @mousedown.self="showDeleteModal = false"
     >
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-2">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
           Delete Transaction
         </h2>
-        <p class="text-sm text-gray-600 mb-5">
+        <p class="text-sm text-gray-600 dark:text-gray-300 mb-5">
           Are you sure you want to delete this
           <span class="font-medium">{{ formatMoney(deleteTarget?.amount ?? 0) }}</span>
           transaction? This action cannot be undone.
@@ -638,7 +648,7 @@
         <div class="flex gap-3">
           <button
             type="button"
-            class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             @click="showDeleteModal = false"
           >
             Cancel

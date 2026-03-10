@@ -1,10 +1,10 @@
 <template>
   <div class="px-6 py-8 max-w-7xl mx-auto">
     <div class="mb-8">
-      <h1 class="text-2xl font-bold text-gray-900">
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
         Good {{ greeting }}, {{ firstName }}
       </h1>
-      <p class="mt-1 text-sm text-gray-500">
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
         Here's your financial overview for {{ currentMonth }}.
       </p>
     </div>
@@ -72,13 +72,13 @@
     <!-- Connect accounts CTA (shown when no providers connected) -->
     <div
       v-if="!integrationsStore.netWorth || integrationsStore.netWorth.byProvider.length === 0"
-      class="mb-8 bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-center justify-between"
+      class="mb-8 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-2xl p-5 flex items-center justify-between"
     >
       <div>
-        <p class="text-sm font-semibold text-amber-900">
+        <p class="text-sm font-semibold text-amber-900 dark:text-amber-200">
           Track your net worth
         </p>
-        <p class="text-xs text-amber-700 mt-0.5">
+        <p class="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
           Connect Coinbase, Bitcoin, or other accounts to see your total wealth.
         </p>
       </div>
@@ -93,19 +93,19 @@
     <!-- Lower grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Spending by Category -->
-      <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-200 p-6">
-        <h2 class="text-base font-semibold text-gray-900 mb-4">
+      <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white mb-4">
           Spending by Category
         </h2>
         <div
           v-if="summaryLoading"
-          class="flex items-center justify-center h-48 text-gray-400 text-sm"
+          class="flex items-center justify-center h-48 text-gray-400 dark:text-gray-500 text-sm"
         >
           Loading…
         </div>
         <div
           v-else-if="categoryTotals.length === 0"
-          class="flex items-center justify-center h-48 text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-xl"
+          class="flex items-center justify-center h-48 text-gray-400 dark:text-gray-500 text-sm border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl"
         >
           No spending data for this month
         </div>
@@ -119,10 +119,10 @@
             class="space-y-1"
           >
             <div class="flex justify-between text-sm">
-              <span class="text-gray-700 font-medium">{{ cat.categoryName }}</span>
-              <span class="text-gray-600">{{ formatMoney(cat.total) }}</span>
+              <span class="text-gray-700 dark:text-gray-300 font-medium">{{ cat.categoryName }}</span>
+              <span class="text-gray-600 dark:text-gray-400">{{ formatMoney(cat.total) }}</span>
             </div>
-            <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div class="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
               <div
                 class="h-full rounded-full bg-primary-500 transition-all"
                 :style="{ width: `${categoryBarPct(cat.total)}%` }"
@@ -133,19 +133,19 @@
       </div>
 
       <!-- Budget Progress -->
-      <div class="bg-white rounded-2xl border border-gray-200 p-6">
-        <h2 class="text-base font-semibold text-gray-900 mb-4">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white mb-4">
           Budget Progress
         </h2>
         <div
           v-if="budgetsLoading"
-          class="text-sm text-gray-400"
+          class="text-sm text-gray-400 dark:text-gray-500"
         >
           Loading…
         </div>
         <div
           v-else-if="budgetsStore.budgets.length === 0"
-          class="flex items-center justify-center h-32 text-sm text-gray-400 border-2 border-dashed border-gray-200 rounded-xl"
+          class="flex items-center justify-center h-32 text-sm text-gray-400 dark:text-gray-500 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl"
         >
           No budgets set
         </div>
@@ -164,13 +164,13 @@
                   class="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0"
                   :style="{ backgroundColor: budget.categoryColor }"
                 />
-                <span class="text-gray-700">{{ budget.categoryName }}</span>
+                <span class="text-gray-700 dark:text-gray-300">{{ budget.categoryName }}</span>
               </div>
-              <span class="text-gray-500 tabular-nums">
+              <span class="text-gray-500 dark:text-gray-400 tabular-nums">
                 {{ formatMoney(budget.spentAmount) }} / {{ formatMoney(budget.limitAmount) }}
               </span>
             </div>
-            <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div class="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
               <div
                 class="h-full rounded-full transition-all"
                 :class="budgetBarColor(budget)"
@@ -183,9 +183,9 @@
     </div>
 
     <!-- Recent Transactions -->
-    <div class="mt-6 bg-white rounded-2xl border border-gray-200 p-6">
+    <div class="mt-6 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-base font-semibold text-gray-900">
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white">
           Recent Transactions
         </h2>
         <RouterLink
@@ -197,19 +197,19 @@
       </div>
       <div
         v-if="summaryLoading"
-        class="flex items-center justify-center h-24 text-gray-400 text-sm"
+        class="flex items-center justify-center h-24 text-gray-400 dark:text-gray-500 text-sm"
       >
         Loading…
       </div>
       <div
         v-else-if="recentTransactions.length === 0"
-        class="flex items-center justify-center h-24 text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-xl"
+        class="flex items-center justify-center h-24 text-gray-400 dark:text-gray-500 text-sm border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl"
       >
         No transactions this month
       </div>
       <ul
         v-else
-        class="divide-y divide-gray-100"
+        class="divide-y divide-gray-100 dark:divide-gray-700"
       >
         <li
           v-for="tx in recentTransactions"
@@ -217,10 +217,10 @@
           class="flex items-center justify-between py-3 first:pt-0 last:pb-0"
         >
           <div class="flex flex-col min-w-0">
-            <span class="text-sm font-medium text-gray-800 truncate">
+            <span class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
               {{ tx.description || tx.categoryName }}
             </span>
-            <span class="text-xs text-gray-400 mt-0.5">
+            <span class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
               {{ tx.categoryName }} · {{ formatDate(tx.date, false) }}
             </span>
           </div>
