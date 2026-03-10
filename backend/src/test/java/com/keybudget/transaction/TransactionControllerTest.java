@@ -17,7 +17,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 import java.math.BigDecimal;
@@ -338,6 +340,79 @@ class TransactionControllerTest {
                 .thenThrow(new RuntimeException("DB error"));
 
         mockMvc.perform(get("/api/v1/transactions/summary")
+                        .with(jwt().jwt(j -> j.claim("userId", 1L))))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error").value("INTERNAL_ERROR"));
+    }
+
+    // -------------------------------------------------------------------------
+    // GET /api/v1/transactions/export
+    // -------------------------------------------------------------------------
+
+    @Test
+    void exportCsv_givenValidJwt_200() throws Exception {
+        String csvContent = "Date,Description,Amount,Category,Type\r\n"
+                + "2026-03-01,Coffee,5.50,Food,EXPENSE\r\n";
+
+        StreamingResponseBody streamingBody = outputStream ->
+                outputStream.write(csvContent.getBytes(StandardCharsets.UTF_8));
+
+        when(transactionService.exportTransactions(eq(1L), any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(streamingBody);
+
+        mockMvc.perform(get("/api/v1/transactions/export")
+                        .param("format", "csv")
+                        .param("start", "2026-03-01")
+                        .param("end", "2026-03-31")
+                        .with(jwt().jwt(j -> j.claim("userId", 1L))))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "text/csv;charset=UTF-8"))
+                .andExpect(header().string("Content-Disposition",
+                        "attachment; filename=\"transactions_2026-03-01_2026-03-31.csv\""))
+                .andExpect(header().string("Cache-Control", "no-cache"))
+                .andExpect(result -> {
+                    String body = result.getResponse().getContentAsString(StandardCharsets.UTF_8);
+                    assertThat(body).startsWith("Date,Description,Amount,Category,Type");
+                    assertThat(body).contains("Coffee");
+                });
+    }
+
+    @Test
+    void exportCsv_givenDefaultDates_200() throws Exception {
+        // No start/end params supplied — service should receive month-start to today
+        StreamingResponseBody streamingBody = outputStream ->
+                outputStream.write("Date,Description,Amount,Category,Type\r\n".getBytes(StandardCharsets.UTF_8));
+
+        when(transactionService.exportTransactions(eq(1L), any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(streamingBody);
+
+        mockMvc.perform(get("/api/v1/transactions/export")
+                        .with(jwt().jwt(j -> j.claim("userId", 1L))))
+                .andExpect(status().isOk())
+                .andExpect(header().exists("Content-Disposition"));
+    }
+
+    @Test
+    void exportCsv_givenUnsupportedFormat_400() throws Exception {
+        mockMvc.perform(get("/api/v1/transactions/export")
+                        .param("format", "xlsx")
+                        .with(jwt().jwt(j -> j.claim("userId", 1L))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void exportCsv_givenNoJwt_401() throws Exception {
+        mockMvc.perform(get("/api/v1/transactions/export"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void exportCsv_givenServiceThrows_500() throws Exception {
+        when(transactionService.exportTransactions(eq(1L), any(LocalDate.class), any(LocalDate.class)))
+                .thenThrow(new RuntimeException("DB error"));
+
+        mockMvc.perform(get("/api/v1/transactions/export")
+                        .param("format", "csv")
                         .with(jwt().jwt(j -> j.claim("userId", 1L))))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.error").value("INTERNAL_ERROR"));
