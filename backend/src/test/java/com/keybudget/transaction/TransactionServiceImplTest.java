@@ -24,6 +24,8 @@ import java.time.YearMonth;
 import java.util.List;
 import java.util.Optional;
 
+import java.time.Instant;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -202,6 +204,34 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    void getMonthlySummary_givenTransferTransaction_excludedFromAllAggregations() {
+        Long userId = 1L;
+        YearMonth month = YearMonth.of(2026, 3);
+        LocalDate start = month.atDay(1);
+        LocalDate end = month.atEndOfMonth();
+
+        Category expenseCat = buildCategory(5L, "Food");
+        Category transferCat = buildCategory(7L, "Transfers");
+
+        Transaction expense = buildTransaction(1L, userId, 5L, new BigDecimal("200.00"), TransactionType.EXPENSE);
+        Transaction transfer = buildTransaction(3L, userId, 7L, new BigDecimal("500.00"), TransactionType.TRANSFER);
+
+        when(categoryRepository.findByUserIdOrUserIdIsNull(userId)).thenReturn(List.of(expenseCat, transferCat));
+        when(transactionRepository.findByUserIdAndDateBetween(userId, start, end))
+                .thenReturn(List.of(expense, transfer));
+
+        MonthlySummaryResponse result = transactionService.getMonthlySummary(userId, month);
+
+        // Transfer must not contribute to income, expenses, or net savings
+        assertThat(result.totalIncome()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(result.totalExpenses()).isEqualByComparingTo("200.00");
+        assertThat(result.netSavings()).isEqualByComparingTo("-200.00");
+        // Only the expense category should appear in byCategory — transfer category excluded
+        assertThat(result.byCategory()).hasSize(1);
+        assertThat(result.byCategory().get(0).categoryId()).isEqualTo(5L);
+    }
+
+    @Test
     void getMonthlySummary_givenNoTransactions_returnsZeroTotals() {
         Long userId = 1L;
         YearMonth month = YearMonth.of(2026, 3);
@@ -280,16 +310,19 @@ class TransactionServiceImplTest {
     // -------------------------------------------------------------------------
 
     @Test
-    void deleteTransaction_givenValidId_deletesTransaction() {
+    void deleteTransaction_givenValidId_softDeletesTransaction() {
         Long userId = 1L;
         Long txId = 20L;
         Transaction existing = buildTransaction(txId, userId, 5L, new BigDecimal("50.00"), TransactionType.EXPENSE);
 
         when(transactionRepository.findByIdAndUserId(txId, userId)).thenReturn(Optional.of(existing));
+        when(transactionRepository.save(existing)).thenReturn(existing);
 
         transactionService.deleteTransaction(userId, txId);
 
-        verify(transactionRepository).delete(existing);
+        assertThat(existing.getDeletedAt()).isNotNull();
+        assertThat(existing.getDeletedAt()).isBeforeOrEqualTo(Instant.now());
+        verify(transactionRepository).save(existing);
     }
 
     @Test

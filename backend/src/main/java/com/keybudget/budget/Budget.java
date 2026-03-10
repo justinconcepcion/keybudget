@@ -2,6 +2,7 @@ package com.keybudget.budget;
 
 import com.keybudget.shared.converter.YearMonthConverter;
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -9,7 +10,12 @@ import java.time.YearMonth;
 
 /**
  * Represents a monthly spending limit set by a user for a specific category.
- * The combination of (userId, categoryId, monthYear) is unique.
+ * The combination of (userId, categoryId, monthYear) is unique among active rows.
+ * Rows are never physically deleted — setting {@code deletedAt} hides them from all queries.
+ *
+ * <p>Note: the DB unique constraint {@code uk_budget_user_category_month} spans all rows
+ * including soft-deleted ones. {@link com.keybudget.budget.BudgetServiceImpl#createBudget}
+ * handles this by un-deleting and updating any matching soft-deleted row instead of inserting.
  */
 @Entity
 @Table(
@@ -19,6 +25,7 @@ import java.time.YearMonth;
                 columnNames = {"user_id", "category_id", "month_year"}
         )
 )
+@SQLRestriction("deleted_at IS NULL")
 public class Budget {
 
     @Id
@@ -44,6 +51,9 @@ public class Budget {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
     @PrePersist
     void prePersist() {
         this.createdAt = Instant.now();
@@ -65,6 +75,8 @@ public class Budget {
 
     public Instant getCreatedAt() { return createdAt; }
 
+    public Instant getDeletedAt() { return deletedAt; }
+
     // Setters
 
     public void setUserId(Long userId) { this.userId = userId; }
@@ -74,4 +86,6 @@ public class Budget {
     public void setMonthYear(YearMonth monthYear) { this.monthYear = monthYear; }
 
     public void setLimitAmount(BigDecimal limitAmount) { this.limitAmount = limitAmount; }
+
+    public void setDeletedAt(Instant deletedAt) { this.deletedAt = deletedAt; }
 }
