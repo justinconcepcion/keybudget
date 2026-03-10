@@ -418,8 +418,19 @@
       showConnectModal.value = false
       connectForm.providerType = ''
       connectForm.credentials = {}
-    } catch {
-      connectFormError.value = 'Failed to connect provider. Check your credentials.'
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { status?: number; data?: { message?: string } } }
+      const status = axiosErr?.response?.status
+      const msg = axiosErr?.response?.data?.message
+      if (status === 401) {
+        connectFormError.value = 'Session expired. Please log in again.'
+      } else if (status === 502) {
+        connectFormError.value = msg || 'External provider error. Please try again later.'
+      } else if (msg) {
+        connectFormError.value = msg
+      } else {
+        connectFormError.value = 'Failed to connect provider. Check your credentials.'
+      }
     } finally {
       submittingConnect.value = false
     }
