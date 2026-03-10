@@ -113,8 +113,12 @@ public class TransactionServiceImpl implements TransactionService {
 
         BigDecimal netSavings = totalIncome.subtract(totalExpenses);
 
-        // Group by category, summing amounts
+        // Group INCOME and EXPENSE transactions by category, summing amounts.
+        // TRANSFER transactions are deliberately excluded — they represent money moved
+        // between accounts and must not inflate category spending figures.
         Map<Long, BigDecimal> totalsMap = all.stream()
+                .filter(t -> t.getType() == TransactionType.INCOME
+                        || t.getType() == TransactionType.EXPENSE)
                 .collect(Collectors.groupingBy(
                         Transaction::getCategoryId,
                         Collectors.reducing(BigDecimal.ZERO, Transaction::getAmount, BigDecimal::add)
@@ -159,7 +163,8 @@ public class TransactionServiceImpl implements TransactionService {
     public void deleteTransaction(Long userId, Long transactionId) {
         Transaction tx = transactionRepository.findByIdAndUserId(transactionId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found: " + transactionId));
-        transactionRepository.delete(tx);
+        tx.setDeletedAt(Instant.now());
+        transactionRepository.save(tx);
     }
 
     // -------------------------------------------------------------------------

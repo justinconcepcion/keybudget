@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.Comparator;
@@ -65,11 +66,25 @@ public class BudgetServiceImpl implements BudgetService {
                     "Category not found or not accessible: " + req.categoryId());
         }
 
-        Budget budget = new Budget();
-        budget.setUserId(userId);
-        budget.setCategoryId(req.categoryId());
-        budget.setMonthYear(req.monthYear());
-        budget.setLimitAmount(req.limitAmount());
+        // If a soft-deleted budget exists for the same (user, category, month) triple,
+        // un-delete it and update the limit rather than inserting a new row.
+        // This avoids a unique-constraint violation while preserving the original row id.
+        Budget budget = budgetRepository
+                .findSoftDeletedByUserIdAndCategoryIdAndMonthYear(
+                        userId, req.categoryId(), req.monthYear().toString())
+                .map(existing -> {
+                    existing.setDeletedAt(null);
+                    existing.setLimitAmount(req.limitAmount());
+                    return existing;
+                })
+                .orElseGet(() -> {
+                    Budget b = new Budget();
+                    b.setUserId(userId);
+                    b.setCategoryId(req.categoryId());
+                    b.setMonthYear(req.monthYear());
+                    b.setLimitAmount(req.limitAmount());
+                    return b;
+                });
 
         try {
             Budget saved = budgetRepository.save(budget);
@@ -115,7 +130,8 @@ public class BudgetServiceImpl implements BudgetService {
             throw new IllegalArgumentException("Budget not found: " + budgetId);
         }
 
-        budgetRepository.delete(budget);
+        budget.setDeletedAt(Instant.now());
+        budgetRepository.save(budget);
     }
 
     private static final int WARNING_THRESHOLD = 80;
