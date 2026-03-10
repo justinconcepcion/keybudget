@@ -80,7 +80,9 @@ class UserControllerTest {
 
     @Test
     void updateCurrency_givenNoJwt_401() throws Exception {
+        // CSRF token provided so the CSRF filter passes; auth check then returns 401
         mockMvc.perform(put("/api/v1/users/me/currency")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"currency\":\"EUR\"}"))
                 .andExpect(status().isUnauthorized());
