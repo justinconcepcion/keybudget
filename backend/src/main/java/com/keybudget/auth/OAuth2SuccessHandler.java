@@ -21,25 +21,26 @@ import java.util.UUID;
 @Component
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
-    private static final int REFRESH_TOKEN_MAX_AGE_SECONDS = 7 * 24 * 3600;
-
     private final UserService userService;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
     private final String frontendUrl;
     private final boolean secureCookie;
+    private final int refreshTokenMaxAge;
 
     public OAuth2SuccessHandler(
             UserService userService,
             JwtService jwtService,
             RefreshTokenService refreshTokenService,
             @Value("${app.frontend-url}") String frontendUrl,
-            @Value("${app.cookie.secure}") boolean secureCookie) {
+            @Value("${app.cookie.secure}") boolean secureCookie,
+            @Value("${app.refresh-token.max-age-seconds}") int refreshTokenMaxAge) {
         this.userService = userService;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
         this.frontendUrl = frontendUrl;
         this.secureCookie = secureCookie;
+        this.refreshTokenMaxAge = refreshTokenMaxAge;
     }
 
     @Override
@@ -62,14 +63,14 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         String jti = jwtService.extractJti(refreshToken);
         String familyId = UUID.randomUUID().toString();
-        refreshTokenService.store(jti, user.getId(), Instant.now().plusSeconds(7 * 24 * 3600), familyId);
+        refreshTokenService.store(jti, user.getId(), Instant.now().plusSeconds(refreshTokenMaxAge), familyId);
 
         // Refresh token: HttpOnly cookie — not accessible to JavaScript
         ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", refreshToken)
                 .httpOnly(true)
                 .secure(secureCookie)
                 .path("/api/v1/auth/")
-                .maxAge(REFRESH_TOKEN_MAX_AGE_SECONDS)
+                .maxAge(refreshTokenMaxAge)
                 .sameSite("Strict")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());

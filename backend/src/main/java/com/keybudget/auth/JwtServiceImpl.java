@@ -20,19 +20,20 @@ import java.util.UUID;
 @Service
 public class JwtServiceImpl implements JwtService {
 
-    private static final long ACCESS_TOKEN_EXPIRY_SECONDS = 15 * 60;         // 15 minutes
-    private static final long REFRESH_TOKEN_EXPIRY_SECONDS = 7 * 24 * 3600;  // 7 days
+    private static final long ACCESS_TOKEN_EXPIRY_SECONDS = 15 * 60;  // 15 minutes
 
     private final PrivateKey privateKey;
     private final PublicKey publicKey;
     private final String issuer;
     private final String audience;
+    private final long refreshTokenMaxAge;
 
     public JwtServiceImpl(
             @Value("${app.jwt.private-key}") String privateKeyBase64,
             @Value("${app.jwt.public-key}") String publicKeyBase64,
             @Value("${app.jwt.issuer}") String issuer,
-            @Value("${app.jwt.audience}") String audience) throws Exception {
+            @Value("${app.jwt.audience}") String audience,
+            @Value("${app.refresh-token.max-age-seconds}") long refreshTokenMaxAge) throws Exception {
         KeyFactory kf = KeyFactory.getInstance("RSA");
         this.privateKey = kf.generatePrivate(
                 new PKCS8EncodedKeySpec(Base64.getDecoder().decode(privateKeyBase64)));
@@ -40,6 +41,7 @@ public class JwtServiceImpl implements JwtService {
                 new X509EncodedKeySpec(Base64.getDecoder().decode(publicKeyBase64)));
         this.issuer = issuer;
         this.audience = audience;
+        this.refreshTokenMaxAge = refreshTokenMaxAge;
     }
 
     @Override
@@ -49,7 +51,7 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public String issueRefreshToken(User user) {
-        return buildToken(user, REFRESH_TOKEN_EXPIRY_SECONDS, "refresh");
+        return buildToken(user, refreshTokenMaxAge, "refresh");
     }
 
     @Override
