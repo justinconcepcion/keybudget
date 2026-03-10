@@ -166,7 +166,7 @@ class BudgetServiceImplTest {
         Budget revived = buildBudget(10L, userId, 5L, month, new BigDecimal("400.00"));
 
         when(categoryRepository.findByUserIdOrUserIdIsNull(userId)).thenReturn(List.of(cat));
-        when(budgetRepository.findSoftDeletedByUserIdAndCategoryIdAndMonthYear(userId, 5L, month))
+        when(budgetRepository.findSoftDeletedByUserIdAndCategoryIdAndMonthYear(userId, 5L, month.toString()))
                 .thenReturn(Optional.of(softDeleted));
         when(budgetRepository.save(softDeleted)).thenReturn(revived);
         when(transactionRepository.sumExpensesByCategory(eq(userId), any(LocalDate.class), any(LocalDate.class)))

@@ -47,7 +47,8 @@ class JwtServiceImplTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        jwtService = new JwtServiceImpl(PRIVATE_KEY_BASE64, PUBLIC_KEY_BASE64, ISSUER, AUDIENCE);
+        // refreshTokenMaxAge: 7 days in seconds (matches prod default)
+        jwtService = new JwtServiceImpl(PRIVATE_KEY_BASE64, PUBLIC_KEY_BASE64, ISSUER, AUDIENCE, 604800L);
     }
 
     private User buildUser(Long id) {
