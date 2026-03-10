@@ -105,6 +105,16 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     boolean existsByUserIdAndCategoryId(Long userId, Long categoryId);
 
+    /**
+     * Returns {@code true} if a transaction with the given import hash already exists.
+     * Used by {@link CsvImportService} to detect duplicate CSV rows before attempting
+     * a save, avoiding unnecessary constraint-violation exceptions.
+     *
+     * @param importHash the 64-character SHA-256 hex hash to look up
+     * @return {@code true} if a matching row exists
+     */
+    boolean existsByImportHash(String importHash);
+
     @Query("SELECT t.categoryId, SUM(t.amount) FROM Transaction t " +
            "WHERE t.userId = :userId AND t.type = 'EXPENSE' " +
            "AND t.date BETWEEN :start AND :end " +

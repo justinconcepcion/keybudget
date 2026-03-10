@@ -59,7 +59,7 @@ class TransactionControllerTest {
                 "Date,Description,Amount\n2026-03-01,Coffee,-5.50\n".getBytes(StandardCharsets.UTF_8));
 
         when(csvImportService.importCsv(eq(1L), any(), isNull()))
-                .thenReturn(new CsvImportResult(1, 1, 0, List.of()));
+                .thenReturn(new CsvImportResult(1, 1, 0, 0, List.of()));
 
         mockMvc.perform(multipart("/api/v1/transactions/import")
                         .file(file)

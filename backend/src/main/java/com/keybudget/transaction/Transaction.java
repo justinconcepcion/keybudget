@@ -44,6 +44,14 @@ public class Transaction {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
+    /**
+     * SHA-256 fingerprint used to detect CSV import duplicates.
+     * Only populated on CSV-imported transactions; null for manually created ones.
+     * The unique partial index on this column rejects re-imports of the same row.
+     */
+    @Column(name = "import_hash", length = 64)
+    private String importHash;
+
     @PrePersist
     void prePersist() {
         this.createdAt = Instant.now();
@@ -69,6 +77,8 @@ public class Transaction {
 
     public Instant getDeletedAt() { return deletedAt; }
 
+    public String getImportHash() { return importHash; }
+
     // Setters
 
     public void setUserId(Long userId) { this.userId = userId; }
@@ -84,4 +94,6 @@ public class Transaction {
     public void setType(TransactionType type) { this.type = type; }
 
     public void setDeletedAt(Instant deletedAt) { this.deletedAt = deletedAt; }
+
+    public void setImportHash(String importHash) { this.importHash = importHash; }
 }
