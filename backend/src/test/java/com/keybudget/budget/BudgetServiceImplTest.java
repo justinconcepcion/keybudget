@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
@@ -149,6 +150,38 @@ class BudgetServiceImplTest {
                 .hasMessageContaining("Category not found or not accessible");
     }
 
+    @Test
+    void createBudget_givenSoftDeletedBudgetExists_unDeletesAndUpdatesLimit() {
+        Long userId = 1L;
+        YearMonth month = YearMonth.of(2026, 3);
+        CreateBudgetRequest req = new CreateBudgetRequest(5L, month, new BigDecimal("400.00"));
+
+        Category cat = buildCategory(5L, "Food", "#FF9800");
+
+        // Simulate a previously soft-deleted budget for the same (user, category, month)
+        Budget softDeleted = buildBudget(10L, userId, 5L, month, new BigDecimal("300.00"));
+        softDeleted.setDeletedAt(Instant.now().minusSeconds(60));
+
+        // After un-delete, the service saves and returns the revived entity
+        Budget revived = buildBudget(10L, userId, 5L, month, new BigDecimal("400.00"));
+
+        when(categoryRepository.findByUserIdOrUserIdIsNull(userId)).thenReturn(List.of(cat));
+        when(budgetRepository.findSoftDeletedByUserIdAndCategoryIdAndMonthYear(userId, 5L, month))
+                .thenReturn(Optional.of(softDeleted));
+        when(budgetRepository.save(softDeleted)).thenReturn(revived);
+        when(transactionRepository.sumExpensesByCategory(eq(userId), any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(List.of());
+
+        BudgetResponse result = budgetService.createBudget(userId, req);
+
+        // The un-deleted budget should have no deletedAt and the new limit
+        assertThat(softDeleted.getDeletedAt()).isNull();
+        assertThat(softDeleted.getLimitAmount()).isEqualByComparingTo("400.00");
+        assertThat(result.id()).isEqualTo(10L);
+        assertThat(result.limitAmount()).isEqualByComparingTo("400.00");
+        verify(budgetRepository).save(softDeleted);
+    }
+
     // -------------------------------------------------------------------------
     // updateBudget
     // -------------------------------------------------------------------------
@@ -198,14 +231,17 @@ class BudgetServiceImplTest {
     // -------------------------------------------------------------------------
 
     @Test
-    void deleteBudget_givenValidBudget_deletesCalled() {
+    void deleteBudget_givenValidBudget_softDeletesBudget() {
         Long userId = 1L;
         Budget budget = buildBudget(10L, userId, 5L, YearMonth.now(), new BigDecimal("200.00"));
         when(budgetRepository.findById(10L)).thenReturn(Optional.of(budget));
+        when(budgetRepository.save(budget)).thenReturn(budget);
 
         budgetService.deleteBudget(userId, 10L);
 
-        verify(budgetRepository).delete(budget);
+        assertThat(budget.getDeletedAt()).isNotNull();
+        assertThat(budget.getDeletedAt()).isBeforeOrEqualTo(Instant.now());
+        verify(budgetRepository).save(budget);
     }
 
     @Test
