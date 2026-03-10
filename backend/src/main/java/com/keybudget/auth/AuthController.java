@@ -20,22 +20,23 @@ import java.time.Instant;
 @RequestMapping("/api/v1/auth")
 public class AuthController {
 
-    private static final int REFRESH_TOKEN_MAX_AGE_SECONDS = 7 * 24 * 3600;
-
     private final JwtService jwtService;
     private final UserService userService;
     private final RefreshTokenService refreshTokenService;
     private final boolean secureCookie;
+    private final int refreshTokenMaxAge;
 
     public AuthController(
             JwtService jwtService,
             UserService userService,
             RefreshTokenService refreshTokenService,
-            @Value("${app.cookie.secure}") boolean secureCookie) {
+            @Value("${app.cookie.secure}") boolean secureCookie,
+            @Value("${app.refresh-token.max-age-seconds}") int refreshTokenMaxAge) {
         this.jwtService = jwtService;
         this.userService = userService;
         this.refreshTokenService = refreshTokenService;
         this.secureCookie = secureCookie;
+        this.refreshTokenMaxAge = refreshTokenMaxAge;
     }
 
     @PostMapping("/refresh")
@@ -74,13 +75,13 @@ public class AuthController {
         String newRefreshToken = jwtService.issueRefreshToken(user);
 
         refreshTokenService.store(jwtService.extractJti(newRefreshToken), userId,
-                Instant.now().plusSeconds(REFRESH_TOKEN_MAX_AGE_SECONDS), storedToken.getFamilyId());
+                Instant.now().plusSeconds(refreshTokenMaxAge), storedToken.getFamilyId());
 
         ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", newRefreshToken)
                 .httpOnly(true)
                 .secure(secureCookie)
                 .path("/api/v1/auth/")
-                .maxAge(REFRESH_TOKEN_MAX_AGE_SECONDS)
+                .maxAge(refreshTokenMaxAge)
                 .sameSite("Strict")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
